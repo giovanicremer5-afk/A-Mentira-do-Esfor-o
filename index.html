@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>S.O.R. — Bem-vindo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Caveat:wght@500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --sea-deep:#0a0e14; --parchment:#E8DCC4; --amber:#C89B3C; --ink-soft:#c9c0ac;
+  }
+  *{box-sizing:border-box; margin:0; padding:0; -webkit-tap-highlight-color:transparent;}
+  html,body{height:100%;}
+  body{
+    background: var(--sea-deep);
+    color:var(--parchment); font-family: Georgia, 'Times New Roman', serif;
+    min-height:100vh; display:flex; flex-direction:column; align-items:center; justify-content:center;
+    padding:48px 26px; transition: padding .4s ease;
+    position:relative;
+  }
+  body::before{
+    content:'';
+    position:fixed; inset:0;
+    background: radial-gradient(ellipse at 50% 0%, #14202e, var(--sea-deep) 70%);
+    z-index:-2;
+    pointer-events:none;
+  }
+  body.reading{
+    justify-content:flex-start; padding-top:60px; padding-bottom:80px;
+  }
+  .wrap{ max-width:480px; width:100%; position:relative; }
+
+  .warm-glow{
+    position:absolute; top:-40px; left:50%; transform:translateX(-50%);
+    width:340px; height:340px; border-radius:50%;
+    background: radial-gradient(circle, rgba(200,155,60,0.10), transparent 70%);
+    pointer-events:none; z-index:-1;
+    animation: glowBreathe 5s ease-in-out infinite;
+  }
+  @keyframes glowBreathe{
+    0%,100%{ opacity:0.5; } 50%{ opacity:0.9; }
+  }
+
+  /* --- tela de abertura (gesto obrigatório p/ liberar áudio) --- */
+  #openGate{
+    display:flex; flex-direction:column; align-items:center; text-align:center;
+    cursor:pointer;
+  }
+  .seal{
+    width:88px; height:88px; border-radius:50%;
+    border:1.5px solid rgba(200,155,60,0.45);
+    display:flex; align-items:center; justify-content:center;
+    margin-bottom:22px; animation: sealPulse 2.6s ease-in-out infinite;
+    background: radial-gradient(circle at 35% 30%, rgba(200,155,60,0.10), transparent 70%);
+  }
+  @keyframes sealPulse{
+    0%,100%{ opacity:0.6; transform:scale(1); } 50%{ opacity:0.95; transform:scale(1.04); }
+  }
+  .seal svg{ width:80px; height:80px; }
+  .seal-title{
+    font-family: Georgia, serif; font-size:6.3px; letter-spacing:1px; font-weight:700;
+    fill:#D9B354; text-transform:uppercase;
+  }
+  #openGate .hint{
+    font-family:'Caveat', cursive; font-size:19px; color:rgba(232,220,196,0.6);
+  }
+
+  /* --- carta --- */
+  #letterScreen{ display:none; width:100%; }
+  .eyebrow{
+    font-size:11px; letter-spacing:3px; text-transform:uppercase; color:var(--amber);
+    opacity:0.7; margin-bottom:6px; text-align:center;
+  }
+  .letter-date{
+    font-family:'Caveat', cursive; font-size:14px; color:rgba(232,220,196,0.4);
+    text-align:center; margin-bottom:24px;
+  }
+  .salutation{
+    font-family:'Caveat', cursive; font-size:22px; color:var(--parchment);
+    margin-bottom:18px; opacity:0.9;
+  }
+  .signature{
+    font-family:'Caveat', cursive; font-size:24px; color:var(--amber);
+    margin-top:6px; opacity:0.85;
+  }
+  #letterText{ font-size:16.5px; line-height:1.8; color:var(--ink-soft); min-height:340px; }
+  #letterText p{ margin-bottom:20px; }
+  #letterText p:empty{ display:none; }
+  #letterText strong{ color:var(--parchment); font-weight:600; font-style:italic; }
+  .caret{
+    display:inline-block; width:2px; height:1em; background:var(--amber);
+    margin-left:1px; vertical-align:text-bottom; animation: blink 0.8s step-end infinite;
+  }
+  @keyframes blink{ 50%{ opacity:0; } }
+
+  .cta-wrap{
+    text-align:center; margin-top:8px; opacity:0; transition:opacity 1s ease; pointer-events:none;
+  }
+  .cta-wrap.show{ opacity:1; pointer-events:auto; }
+  .cta{
+    padding:16px 40px; border-radius:30px; border:none;
+    background: linear-gradient(135deg, var(--amber), #a97d1f);
+    color:#1c150a; font-family:Georgia,serif; font-weight:700; font-size:15.5px;
+    letter-spacing:0.4px; cursor:pointer;
+  }
+  .skip{
+    position:fixed; top:18px; right:20px; font-size:12px; color:rgba(232,220,196,0.35);
+    letter-spacing:0.5px; cursor:pointer; z-index:10;
+  }
+  .mute-toggle{
+    position:fixed; top:16px; left:20px; z-index:10;
+    width:32px; height:32px; border-radius:50%;
+    display:none; align-items:center; justify-content:center;
+    font-size:14px; color:rgba(232,220,196,0.4); cursor:pointer;
+    background:rgba(0,0,0,0.2); border:1px solid rgba(200,155,60,0.2);
+  }
+  .mute-toggle.visible{ display:flex; }
+</style>
+</head>
+<body>
+
+<div class="skip" id="btnSkip">pular ⟶</div>
+<div class="mute-toggle" id="btnMute" title="Silenciar áudio">🔊</div>
+
+<div class="wrap">
+
+  <div id="openGate">
+    <div class="seal">
+      <svg viewBox="0 0 100 100">
+        <defs>
+          <path id="sealCurveTop" d="M 14,50 A 36,36 0 0 1 86,50" fill="none"/>
+          <path id="sealCurveBottom" d="M 86,50 A 36,36 0 0 1 14,50" fill="none"/>
+        </defs>
+        <circle cx="50" cy="50" r="44" fill="none" stroke="#8a6b1e" stroke-width="1"/>
+        <circle cx="50" cy="50" r="38" fill="none" stroke="#D9B354" stroke-width="0.6"/>
+        <text class="seal-title">
+          <textPath href="#sealCurveTop" startOffset="50%" text-anchor="middle">A Mentira do Esforço</textPath>
+        </text>
+        <line x1="50" y1="32" x2="50" y2="74" stroke="#D9B354" stroke-width="1.3" opacity="0.85"/>
+        <path d="M50 36 C61 40, 65 49, 50 59 Z" fill="#D9B354" opacity="0.8"/>
+      </svg>
+    </div>
+    <div class="hint">alguém escreveu isso pensando em você</div>
+  </div>
+
+  <div id="letterScreen">
+    <div class="warm-glow"></div>
+    <div class="eyebrow">Uma carta, antes de começar</div>
+    <div class="letter-date" id="letterDate"></div>
+    <div id="letterText"></div>
+    <div class="cta-wrap" id="ctaWrap">
+      <button class="cta" id="btnEntrar">Entrar na jornada</button>
+    </div>
+  </div>
+
+</div>
+
+<!--
+  ÁUDIO — preparado para receber narração do dublador.
+  Quando o arquivo final (boasvindas_v1.wav) chegar com timestamps por
+  palavra, o typewriter abaixo passa a ser guiado pelo tempo real do
+  áudio (cada caractere aparece no instante em que é falado), em vez
+  do ritmo simulado atual. O som de "tecla" sintetizado abaixo é
+  provisório — some assim que a narração real assumir o ritmo.
+-->
+
+<script>
+(function(){
+  let perfil = null;
+  try{ perfil = JSON.parse(localStorage.getItem('sor_perfil')||'null'); }catch(e){}
+  const primeiroNome = perfil && perfil.nome ? perfil.nome.split(' ')[0] : null;
+  const saudacao = primeiroNome ? `Caro ${primeiroNome},` : 'Caro leitor,';
+
+  const hoje = new Date();
+  document.getElementById('letterDate').textContent =
+    'hoje, ' + hoje.toLocaleDateString('pt-BR', {day:'2-digit', month:'long', year:'numeric'});
+
+  const LETTER = [
+    [{t:"Se você chegou até aqui, já leu o suficiente do livro pra saber que isso não é sobre ganhar mais dinheiro."}],
+    [{t:"É sobre parar de remar sem direção."}],
+    [{t:"Se você leu até o fim, teve pelo menos um momento em que parou a leitura porque alguma frase acertou perto demais. Talvez tenha lembrado de uma cena específica — uma conversa, uma conta, uma noite em que o cansaço não tinha nome. Isso não foi coincidência. Foi o livro fazendo o que livro nenhum de motivação faz: te mostrar o espelho, não a fórmula."}],
+    [{t:"Eu passei anos fazendo esforço que não ia a lugar nenhum — trabalhando mais, ganhando mais, e sentindo exatamente a mesma coisa no fim do mês. A conta nunca fechava. Não porque faltava dinheiro. Faltava direção "},{t:"clara, intencional, com propósito",b:true},{t:"."}],
+    [{t:"A tempestade não passa sozinha. O que vem a seguir exige respostas de verdade — sem se poupar, sem se explicar demais. Não existe certo ou errado. Existe só o que é seu — e o que está te segurando na água, "},{t:"à deriva",b:true},{t:", sem você perceber."}],
+    [{t:"Não vou te prometer que vai ser fácil. Vou te dizer que dá pra sair da inércia. Eu saí. E o primeiro passo é sempre o mesmo: parar de fingir que o barco está bem."}]
+  ];
+
+  const openGate = document.getElementById('openGate');
+  const letterScreen = document.getElementById('letterScreen');
+  const letterText = document.getElementById('letterText');
+  const ctaWrap = document.getElementById('ctaWrap');
+  const btnSkip = document.getElementById('btnSkip');
+  const btnMute = document.getElementById('btnMute');
+
+  let actx = null;
+  let padNodes = null;
+  let audioMuted = false;
+  function unlockAudio(){
+    actx = new (window.AudioContext||window.webkitAudioContext)();
+  }
+
+  /* pad emocional sustentado — acompanha a leitura da carta inteira */
+  function startPad(){
+    if(!actx) return;
+    const master = actx.createGain();
+    master.gain.value = 0;
+    master.connect(actx.destination);
+    master.gain.linearRampToValueAtTime(0.05, actx.currentTime + 3);
+
+    const convolver = actx.createConvolver();
+    const irLen = actx.sampleRate * 2.2;
+    const irBuffer = actx.createBuffer(2, irLen, actx.sampleRate);
+    for(let ch=0; ch<2; ch++){
+      const d = irBuffer.getChannelData(ch);
+      for(let i=0;i<irLen;i++){ d[i] = (Math.random()*2-1) * Math.pow(1 - i/irLen, 3.6) * 0.22; }
+    }
+    convolver.buffer = irBuffer;
+    const wetGain = actx.createGain();
+    wetGain.gain.value = 0.16;
+    convolver.connect(wetGain); wetGain.connect(master);
+
+    const filter = actx.createBiquadFilter();
+    filter.type = 'lowpass'; filter.frequency.value = 900;
+    filter.connect(convolver);
+    filter.connect(master);
+
+    // LFO lento no filtro — respiração do pad
+    const lfo = actx.createOscillator();
+    lfo.frequency.value = 0.045;
+    const lfoGain = actx.createGain();
+    lfoGain.gain.value = 220;
+    lfo.connect(lfoGain); lfoGain.connect(filter.frequency);
+    lfo.start();
+
+    // progressão lenta — Dmaj7 / Bm7 / Gmaj7, voice leading suave (só uma voz muda por troca)
+    var CHORDS = [
+      [146.83, 220.00, 293.66, 369.99], // Dmaj7
+      [123.47, 220.00, 293.66, 369.99], // Bm7
+      [123.47, 196.00, 293.66, 369.99]  // Gmaj7
+    ];
+    const oscs = [];
+    CHORDS[0].forEach((freq, idx)=>{
+      const osc = actx.createOscillator();
+      osc.type = 'triangle';
+      osc.frequency.value = freq;
+      osc.detune.value = (idx%2===0? -3:3);
+      const g = actx.createGain();
+      g.gain.value = 1/CHORDS[0].length;
+      osc.connect(g); g.connect(filter);
+      osc.start();
+      oscs.push(osc);
+    });
+
+    var chordIdx = 0;
+    var chordTimer = null;
+    function proximoAcorde(){
+      chordIdx = (chordIdx + 1) % CHORDS.length;
+      var alvo = CHORDS[chordIdx];
+      var now = actx.currentTime;
+      oscs.forEach(function(osc, idx){
+        osc.frequency.linearRampToValueAtTime(alvo[idx], now + 3.2);
+      });
+      chordTimer = setTimeout(proximoAcorde, 9000);
+    }
+    chordTimer = setTimeout(proximoAcorde, 9000);
+
+    // arpejo suave — notas pontuadas do acorde atual, uma oitava acima, dão movimento audível real
+    var ordemArpejo = [0,2,1,3];
+    var passoArpejo = 0;
+    var arpejoTimer = null;
+    function tocarNotaArpejo(){
+      var freqBase = CHORDS[chordIdx][ordemArpejo[passoArpejo % ordemArpejo.length]];
+      passoArpejo++;
+      var osc = actx.createOscillator();
+      osc.type = 'sine';
+      osc.frequency.value = freqBase * 2;
+      var g = actx.createGain();
+      g.gain.value = 0.0001;
+      osc.connect(g); g.connect(master);
+      var now = actx.currentTime;
+      g.gain.exponentialRampToValueAtTime(0.045, now + 0.08);
+      g.gain.exponentialRampToValueAtTime(0.0001, now + 2.1);
+      osc.start(now); osc.stop(now + 2.2);
+      var proximo = 2200 + Math.random()*900;
+      arpejoTimer = setTimeout(tocarNotaArpejo, proximo);
+    }
+    arpejoTimer = setTimeout(tocarNotaArpejo, 2600);
+
+    padNodes = {master, lfo, oscs,
+      clearChordTimer: function(){ clearTimeout(chordTimer); clearTimeout(arpejoTimer); }};
+  }
+
+  function stopPad(){
+    if(!padNodes || !actx) return;
+    const now = actx.currentTime;
+    padNodes.master.gain.linearRampToValueAtTime(0, now + 2);
+    if(padNodes.clearChordTimer) padNodes.clearChordTimer();
+    setTimeout(()=>{
+      padNodes.oscs.forEach(o=>{ try{ o.stop(); }catch(e){} });
+      try{ padNodes.lfo.stop(); }catch(e){}
+    }, 2100);
+  }
+
+  function typeClick(isSpace){
+    if(!actx || audioMuted) return;
+    const bufferSize = actx.sampleRate * 0.018;
+    const buffer = actx.createBuffer(1, bufferSize, actx.sampleRate);
+    const data = buffer.getChannelData(0);
+    for(let i=0;i<bufferSize;i++){ data[i] = (Math.random()*2-1) * Math.pow(1 - i/bufferSize, 5); }
+    const src = actx.createBufferSource();
+    src.buffer = buffer;
+    const filter = actx.createBiquadFilter();
+    filter.type = 'bandpass';
+    filter.frequency.value = isSpace ? 850 : (1500 + Math.random()*700);
+    filter.Q.value = 1.7;
+    const gain = actx.createGain();
+    gain.gain.value = isSpace ? 0.045 : 0.075;
+    src.connect(filter); filter.connect(gain); gain.connect(actx.destination);
+    src.start();
+  }
+
+  function typeBell(){
+    if(!actx) return;
+    const osc = actx.createOscillator();
+    osc.type = 'sine'; osc.frequency.value = 1600;
+    const gain = actx.createGain();
+    gain.gain.value = 0.0001;
+    osc.connect(gain); gain.connect(actx.destination);
+    const now = actx.currentTime;
+    gain.gain.exponentialRampToValueAtTime(0.06, now+0.01);
+    gain.gain.exponentialRampToValueAtTime(0.0001, now+0.5);
+    osc.start(now); osc.stop(now+0.5);
+  }
+
+  let cancelled = false;
+
+  async function typeParagraph(segments, isSalutation){
+    const p = document.createElement('p');
+    if(isSalutation) p.className = 'salutation';
+    letterText.appendChild(p);
+    const caret = document.createElement('span');
+    caret.className = 'caret';
+    p.appendChild(caret);
+
+    for(const seg of segments){
+      const node = seg.b ? document.createElement('strong') : null;
+      let target;
+      if(node){ p.insertBefore(node, caret); target = node; }
+
+      for(const ch of seg.t){
+        if(cancelled) return;
+        if(node){ node.textContent += ch; }
+        else { caret.insertAdjacentText('beforebegin', ch); }
+        if(ch !== ' '){ typeClick(false); } else { typeClick(true); }
+        let delay = 58 + Math.random()*40;
+        if('.,—;:'.includes(ch)) delay += 320;
+        await sleep(delay);
+      }
+    }
+    caret.remove();
+  }
+
+  function sleep(ms){ return new Promise(r=>setTimeout(r, ms)); }
+
+  async function runLetter(){
+    await typeParagraph([{t:saudacao}], true);
+    await sleep(900);
+    for(const paragraph of LETTER){
+      if(cancelled) return;
+      await typeParagraph(paragraph);
+      letterText.lastElementChild.scrollIntoView({behavior:'smooth', block:'center'});
+      await sleep(1400);
+    }
+    const sig = document.createElement('div');
+    sig.className = 'signature';
+    sig.textContent = '— A Mentira do Esforço';
+    letterText.appendChild(sig);
+    sig.scrollIntoView({behavior:'smooth', block:'center'});
+    stopPad();
+    await sleep(1800);
+    ctaWrap.classList.add('show');
+  }
+
+  function skipToEnd(){
+    cancelled = true;
+    stopPad();
+    letterText.innerHTML = '';
+    const sal = document.createElement('p');
+    sal.className = 'salutation'; sal.textContent = saudacao;
+    letterText.appendChild(sal);
+    LETTER.forEach(segs=>{
+      const p = document.createElement('p');
+      segs.forEach(seg=>{
+        if(seg.b){ const s=document.createElement('strong'); s.textContent=seg.t; p.appendChild(s); }
+        else{ p.appendChild(document.createTextNode(seg.t)); }
+      });
+      letterText.appendChild(p);
+    });
+    const sig = document.createElement('div');
+    sig.className = 'signature';
+    sig.textContent = '— A Mentira do Esforço';
+    letterText.appendChild(sig);
+    ctaWrap.classList.add('show');
+    btnSkip.style.display='none';
+  }
+
+  openGate.addEventListener('click', function(){
+    unlockAudio();
+    startPad();
+    openGate.style.display = 'none';
+    letterScreen.style.display = 'block';
+    document.body.classList.add('reading');
+    btnMute.classList.add('visible');
+    runLetter();
+  });
+
+  btnSkip.addEventListener('click', function(){
+    document.body.classList.add('reading');
+    openGate.style.display = 'none';
+    letterScreen.style.display = 'block';
+    skipToEnd();
+  });
+
+  btnMute.addEventListener('click', function(){
+    audioMuted = !audioMuted;
+    btnMute.textContent = audioMuted ? '🔇' : '🔊';
+    if(padNodes && actx){
+      const target = audioMuted ? 0 : 0.05;
+      padNodes.master.gain.linearRampToValueAtTime(target, actx.currentTime + 0.6);
+    }
+  });
+
+  document.getElementById('btnEntrar').addEventListener('click', function(){
+    stopPad();
+    localStorage.setItem('sor_boasvindas_vista','1');
+    // SIMULAÇÃO (ago/2026): liga direto no M1, já que o Hub ainda não faz
+    // parte deste teste de fluxo. Em produção, isso passa pelo Hub.
+    window.location.href = 'm1_raiox_do_barco.html';
+  });
+})();
+</script>
+</body>
+</html>
