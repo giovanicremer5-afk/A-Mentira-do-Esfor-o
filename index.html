@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,viewport-fit=cover">
+<title>S.O.R. — Entrar</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Caveat:wght@500;600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --tinta:#0b1420; --tinta2:#13202f; --papel:#ece0c4; --ambar:#b8922a; --ambar2:#d9b354;
+  --branco:#f4efe2; --erro:#c1553c;
+  --font-display:'Cormorant Garamond',serif; --font-manuscrita:'Caveat',cursive; --font-corpo:'Inter',sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+html,body{height:100%;}
+body{
+  font-family:var(--font-corpo); background:var(--tinta); color:var(--branco);
+  min-height:100vh; display:flex; flex-direction:column; align-items:center; justify-content:center; padding:28px;
+}
+.marca{font-family:var(--font-display); font-size:15px; letter-spacing:.08em; color:var(--ambar2); text-transform:uppercase; margin-bottom:6px;}
+.frase{font-family:var(--font-manuscrita); font-size:19px; color:rgba(244,239,226,.7); margin-bottom:34px; text-align:center;}
+.card{width:100%; max-width:380px; background:var(--tinta2); border-radius:14px; padding:26px 24px; border:1px solid rgba(216,179,84,.18);}
+.abas{display:flex; gap:4px; margin-bottom:22px; background:rgba(0,0,0,.2); border-radius:8px; padding:3px;}
+.aba{flex:1; text-align:center; padding:9px; border-radius:6px; font-size:13.5px; font-weight:600; color:rgba(244,239,226,.5); cursor:pointer;}
+.aba.sel{background:var(--ambar); color:var(--tinta);}
+label{display:block; font-size:12.5px; color:rgba(244,239,226,.6); margin-bottom:6px; margin-top:16px;}
+label:first-of-type{margin-top:0;}
+input{
+  width:100%; background:rgba(0,0,0,.22); border:1px solid rgba(244,239,226,.15); border-radius:7px;
+  padding:12px 13px; color:var(--branco); font-size:14.5px; font-family:inherit;
+}
+input:focus{outline:none; border-color:var(--ambar2);}
+.erro-campo{font-size:12px; color:var(--erro); margin-top:5px; display:none;}
+.erro-campo.ativo{display:block;}
+button.entrar{
+  width:100%; background:var(--ambar); color:var(--tinta); font-weight:700; padding:14px;
+  border-radius:8px; font-size:14.5px; margin-top:22px; border:none; cursor:pointer;
+}
+.rodape-nota{font-size:11.5px; color:rgba(244,239,226,.35); text-align:center; margin-top:18px; line-height:1.5;}
+.bloco{display:none;}
+.bloco.ativo{display:block;}
+</style>
+</head>
+<body>
+
+<div class="marca">S.O.R.</div>
+<div class="frase">a parte que realmente muda alguma coisa começa aqui</div>
+
+<div class="card">
+  <div class="abas">
+    <div class="aba sel" id="abaEntrar">Entrar</div>
+    <div class="aba" id="abaCriar">Criar conta</div>
+  </div>
+
+  <div class="bloco ativo" id="blocoEntrar">
+    <label>E-mail</label>
+    <input type="email" id="emailEntrar" placeholder="voce@email.com">
+    <div class="erro-campo" id="erroEmailEntrar">Digite um e-mail válido.</div>
+    <label>Senha</label>
+    <input type="password" id="senhaEntrar" placeholder="••••••••">
+    <div class="erro-campo" id="erroSenhaEntrar">Digite sua senha.</div>
+    <a href="#" id="linkEsqueci" style="display:block; text-align:right; font-size:12.5px; color:var(--ambar2); text-decoration:underline; margin-top:8px;">esqueci minha senha</a>
+    <button class="entrar" id="btnEntrar">Entrar</button>
+  </div>
+
+  <div class="bloco" id="blocoEsqueci">
+    <p style="font-size:13.5px; color:rgba(244,239,226,.7); line-height:1.55; margin-bottom:18px;">Digite o e-mail da sua conta. Se ele existir na nossa base, enviamos um link pra você criar uma senha nova.</p>
+    <label>E-mail</label>
+    <input type="email" id="emailEsqueci" placeholder="voce@email.com">
+    <div class="erro-campo" id="erroEmailEsqueci">Digite um e-mail válido.</div>
+    <button class="entrar" id="btnEsqueci">Enviar link</button>
+    <a href="#" id="linkVoltarEntrar" style="display:block; text-align:center; font-size:12.5px; color:rgba(244,239,226,.5); text-decoration:underline; margin-top:16px;">voltar pro login</a>
+  </div>
+
+  <div class="bloco" id="blocoEsqueciEnviado" style="text-align:center;">
+    <p style="font-size:14.5px; color:var(--branco); line-height:1.6; margin-bottom:6px;">Se esse e-mail existir na nossa base, o link chega em instantes.</p>
+    <p style="font-size:12.5px; color:rgba(244,239,226,.5); margin-bottom:18px;">Confira também a caixa de spam.</p>
+    <a href="#" id="linkVoltarEntrar2" style="font-size:13px; color:var(--ambar2); text-decoration:underline;">voltar pro login</a>
+  </div>
+
+  <div class="bloco" id="blocoCriar">
+    <label>Nome</label>
+    <input type="text" id="nomeCriar" placeholder="Seu nome">
+    <div class="erro-campo" id="erroNomeCriar">Digite seu nome.</div>
+    <label>E-mail</label>
+    <input type="email" id="emailCriar" placeholder="voce@email.com">
+    <div class="erro-campo" id="erroEmailCriar">Digite um e-mail válido.</div>
+    <label>Senha</label>
+    <input type="password" id="senhaCriar" placeholder="mínimo 6 caracteres">
+    <div class="erro-campo" id="erroSenhaCriar">A senha precisa ter pelo menos 6 caracteres.</div>
+    <button class="entrar" id="btnCriar">Criar conta e começar</button>
+  </div>
+
+  <div class="rodape-nota">Sua conta é criada antes da Vistoria pra você nunca perder seu progresso, em nenhum aparelho.</div>
+</div>
+
+<script>
+(function(){
+function carregar(k){ try{ return JSON.parse(localStorage.getItem(k)||'null'); }catch(e){ return null; } }
+function salvar(k,v){ localStorage.setItem(k, JSON.stringify(v)); }
+
+var perfil = carregar('sor_perfil');
+if(perfil && perfil.email){
+  window.location.href = '0_hub_mapa.html';
+  return;
+}
+
+document.getElementById('abaEntrar').addEventListener('click', function(){
+  document.getElementById('abaEntrar').classList.add('sel');
+  document.getElementById('abaCriar').classList.remove('sel');
+  ['blocoEntrar'].forEach(function(id){ document.getElementById(id).classList.add('ativo'); });
+  ['blocoCriar','blocoEsqueci','blocoEsqueciEnviado'].forEach(function(id){ document.getElementById(id).classList.remove('ativo'); });
+});
+document.getElementById('abaCriar').addEventListener('click', function(){
+  document.getElementById('abaCriar').classList.add('sel');
+  document.getElementById('abaEntrar').classList.remove('sel');
+  ['blocoCriar'].forEach(function(id){ document.getElementById(id).classList.add('ativo'); });
+  ['blocoEntrar','blocoEsqueci','blocoEsqueciEnviado'].forEach(function(id){ document.getElementById(id).classList.remove('ativo'); });
+});
+
+function mostrarSo(id){
+  ['blocoEntrar','blocoCriar','blocoEsqueci','blocoEsqueciEnviado'].forEach(function(i){
+    document.getElementById(i).classList.toggle('ativo', i===id);
+  });
+}
+document.getElementById('linkEsqueci').addEventListener('click', function(e){
+  e.preventDefault();
+  document.querySelectorAll('.aba').forEach(function(a){ a.classList.remove('sel'); });
+  mostrarSo('blocoEsqueci');
+});
+document.getElementById('linkVoltarEntrar').addEventListener('click', function(e){
+  e.preventDefault();
+  document.getElementById('abaEntrar').classList.add('sel');
+  mostrarSo('blocoEntrar');
+});
+document.getElementById('linkVoltarEntrar2').addEventListener('click', function(e){
+  e.preventDefault();
+  document.getElementById('abaEntrar').classList.add('sel');
+  mostrarSo('blocoEntrar');
+});
+document.getElementById('btnEsqueci').addEventListener('click', function(){
+  var email = document.getElementById('emailEsqueci').value.trim();
+  var ok = emailValido(email);
+  document.getElementById('erroEmailEsqueci').classList.toggle('ativo', !ok);
+  if(!ok) return;
+  mostrarSo('blocoEsqueciEnviado');
+});
+
+function emailValido(v){ return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(v); }
+
+document.getElementById('btnEntrar').addEventListener('click', function(){
+  var email = document.getElementById('emailEntrar').value.trim();
+  var senha = document.getElementById('senhaEntrar').value;
+  var okEmail = emailValido(email);
+  var okSenha = senha.length > 0;
+  document.getElementById('erroEmailEntrar').classList.toggle('ativo', !okEmail);
+  document.getElementById('erroSenhaEntrar').classList.toggle('ativo', !okSenha);
+  if(!okEmail || !okSenha) return;
+
+  var existente = carregar('sor_perfil');
+  salvar('sor_perfil', {email: email, nome: (existente && existente.nome) || email.split('@')[0], criado_em: (existente && existente.criado_em) || new Date().toISOString()});
+  window.location.href = '0_hub_mapa.html';
+});
+
+document.getElementById('btnCriar').addEventListener('click', function(){
+  var nome = document.getElementById('nomeCriar').value.trim();
+  var email = document.getElementById('emailCriar').value.trim();
+  var senha = document.getElementById('senhaCriar').value;
+  var okNome = nome.length > 0;
+  var okEmail = emailValido(email);
+  var okSenha = senha.length >= 6;
+  document.getElementById('erroNomeCriar').classList.toggle('ativo', !okNome);
+  document.getElementById('erroEmailCriar').classList.toggle('ativo', !okEmail);
+  document.getElementById('erroSenhaCriar').classList.toggle('ativo', !okSenha);
+  if(!okNome || !okEmail || !okSenha) return;
+
+  salvar('sor_perfil', {email: email, nome: nome, criado_em: new Date().toISOString()});
+  window.location.href = '0_hub_mapa.html';
+});
+})();
+</script>
+</body>
+</html>
