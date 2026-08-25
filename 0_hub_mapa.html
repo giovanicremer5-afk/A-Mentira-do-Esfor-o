@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,viewport-fit=cover">
+<title>S.O.R. — Carta de Navegação</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Caveat:wght@500;600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --tinta:#0b1420; --tinta2:#13202f; --tinta3:#182838; --papel:#ece0c4; --papel2:#e2d3ac;
+  --ambar:#b8922a; --ambar2:#d9b354; --agua-clara:#2e5372; --agua-escura:#0d1c2a;
+  --branco:#f4efe2; --erro:#c1553c; --verde:#3c6e4f;
+  --font-display:'Cormorant Garamond',serif; --font-manuscrita:'Caveat',cursive; --font-corpo:'Inter',sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+html,body{height:100%;overscroll-behavior:none;}
+body{font-family:var(--font-corpo); background:var(--tinta); color:var(--branco); min-height:100vh; overflow-x:hidden;}
+button{font-family:inherit; cursor:pointer; border:none; background:none; color:inherit;}
+
+.topo{
+  display:flex; justify-content:space-between; align-items:center;
+  padding:18px 20px 14px; border-bottom:1px solid rgba(244,239,226,.08);
+}
+.topo-marca{font-family:var(--font-display); font-size:15px; letter-spacing:.06em; color:var(--ambar2); text-transform:uppercase;}
+.topo-stats{display:flex; gap:16px; align-items:center;}
+.stat{text-align:right;}
+.stat .rotulo{font-size:10px; text-transform:uppercase; letter-spacing:.05em; color:rgba(244,239,226,.5);}
+.stat .valor{font-family:var(--font-display); font-size:17px; font-weight:600; color:var(--ambar2);}
+.streak{display:flex; align-items:center; gap:4px; font-size:13px; color:var(--ambar2); font-weight:600;}
+
+.carta-wrap{position:relative; padding:8px 0 30px;}
+.carta-titulo{text-align:center; padding:22px 20px 6px;}
+.carta-titulo h1{font-family:var(--font-display); font-size:24px; font-weight:600; color:var(--papel);}
+.carta-titulo p{font-family:var(--font-manuscrita); font-size:17px; color:var(--ambar2); margin-top:2px;}
+
+.mapa-svg{width:100%; display:block; touch-action:manipulation;}
+
+.estacao{cursor:pointer;}
+.estacao .ilha{transition:filter .25s ease;}
+.estacao.ativa .ilha{animation:pulso 2.4s ease-in-out infinite;}
+@keyframes pulso{
+  0%,100%{filter:drop-shadow(0 0 0px var(--ambar2));}
+  50%{filter:drop-shadow(0 0 10px var(--ambar2));}
+}
+.estacao.previa .ilha{opacity:.42;}
+.estacao.previa .estacao-selo{opacity:.5;}
+.estacao.disponivel .ilha{opacity:.82;}
+.estacao:active .ilha{transform:scale(.94); transform-origin:center;}
+
+.legenda-mapa{display:flex; justify-content:center; gap:22px; padding:6px 20px 0; flex-wrap:wrap;}
+.legenda-item{display:flex; align-items:center; gap:6px; font-size:11px; color:rgba(244,239,226,.55);}
+.legenda-ponto{width:8px; height:8px; border-radius:50%;}
+.legenda-ponto.on{background:var(--ambar2);}
+.legenda-ponto.off{background:rgba(244,239,226,.25);}
+
+.link-historico{display:block; text-align:center; margin:26px auto 0; font-size:13px; color:var(--ambar2); text-decoration:underline; text-underline-offset:3px;}
+
+/* ---------- MODAL DE PRÉVIA ---------- */
+.modal-overlay{
+  position:fixed; inset:0; background:rgba(11,20,32,.86); backdrop-filter:blur(2px);
+  display:flex; align-items:flex-end; justify-content:center; z-index:50;
+  opacity:0; pointer-events:none; transition:opacity .25s ease;
+}
+.modal-overlay.aberto{opacity:1; pointer-events:auto;}
+.modal-previa{
+  width:100%; max-width:480px; background:var(--tinta2); border-radius:20px 20px 0 0;
+  padding:28px 24px 34px; transform:translateY(24px); transition:transform .3s ease;
+  border-top:1px solid rgba(216,179,84,.25);
+}
+.modal-overlay.aberto .modal-previa{transform:translateY(0);}
+.modal-previa .selo-mini{font-family:var(--font-manuscrita); font-size:15px; color:var(--ambar2); margin-bottom:6px;}
+.modal-previa h2{font-family:var(--font-display); font-size:23px; font-weight:600; color:var(--papel); margin-bottom:12px;}
+.modal-previa p{font-size:14.5px; line-height:1.6; color:rgba(244,239,226,.82); margin-bottom:18px;}
+.modal-previa .condicao{
+  font-size:12.5px; color:var(--ambar2); background:rgba(184,146,42,.1);
+  border:1px solid rgba(184,146,42,.28); border-radius:8px; padding:10px 12px; margin-bottom:18px;
+}
+.modal-previa button{
+  width:100%; background:var(--ambar); color:var(--tinta); font-weight:700;
+  padding:14px; border-radius:8px; font-size:14.5px;
+}
+</style>
+</head>
+<body>
+
+<div class="topo">
+  <a href="home_mapa_do_leitor.html" class="topo-marca" style="text-decoration:none;">← S.O.R.</a>
+  <div class="topo-stats">
+    <div class="streak" id="streakWrap" style="display:none;">🔥 <span id="streakValor">0</span></div>
+    <div class="stat" id="reservaWrap" style="display:none;">
+      <div class="rotulo">Reserva de Paz</div>
+      <div class="valor" id="reservaValor">R$ 0</div>
+    </div>
+  </div>
+</div>
+
+<div class="carta-wrap">
+  <div class="carta-titulo">
+    <h1>Carta de Navegação</h1>
+    <p id="subtituloCarta">sua rota até aqui</p>
+  </div>
+
+  <svg class="mapa-svg" viewBox="0 0 400 620" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" id="mapaSvg">
+    <defs>
+      <radialGradient id="fundoAgua" cx="50%" cy="30%" r="85%">
+        <stop offset="0%" stop-color="#25405a"/>
+        <stop offset="35%" stop-color="#1c2e40"/>
+        <stop offset="70%" stop-color="#122030"/>
+        <stop offset="100%" stop-color="#080e16"/>
+      </radialGradient>
+      <linearGradient id="veiosAgua" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stop-color="#2e4a63" stop-opacity="0.35"/>
+        <stop offset="45%" stop-color="#0d1c2a" stop-opacity="0"/>
+        <stop offset="55%" stop-color="#0d1c2a" stop-opacity="0"/>
+        <stop offset="100%" stop-color="#0a1420" stop-opacity="0.5"/>
+      </linearGradient>
+      <filter id="relevoMapa" x="-20%" y="-20%" width="140%" height="140%">
+        <feTurbulence type="fractalNoise" baseFrequency="0.008 0.014" numOctaves="4" seed="12" result="n"/>
+        <feDiffuseLighting in="n" lighting-color="#8fb4d4" surfaceScale="2.4" diffuseConstant="1" result="luz">
+          <feDistantLight azimuth="235" elevation="55"/>
+        </feDiffuseLighting>
+        <feComposite in="luz" in2="SourceGraphic" operator="arithmetic" k1="0" k2="0.82" k3="0.28" k4="0"/>
+      </filter>
+      <filter id="texturaPapel">
+        <feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="2" seed="7" result="ruido"/>
+        <feColorMatrix in="ruido" type="matrix" values="0 0 0 0 0.85  0 0 0 0 0.72  0 0 0 0 0.45  0 0 0 0.035 0"/>
+      </filter>
+      <radialGradient id="vinheta" cx="50%" cy="46%" r="72%">
+        <stop offset="60%" stop-color="#000000" stop-opacity="0"/>
+        <stop offset="100%" stop-color="#000000" stop-opacity="0.42"/>
+      </radialGradient>
+      <filter id="relevoEstacao" x="-60%" y="-60%" width="220%" height="220%">
+        <feGaussianBlur in="SourceAlpha" stdDeviation="3" result="b"/>
+        <feOffset in="b" dx="0" dy="2" result="o"/>
+        <feFlood flood-color="#000000" flood-opacity="0.55"/>
+        <feComposite in2="o" operator="in" result="sombra"/>
+        <feMerge>
+          <feMergeNode in="sombra"/>
+          <feMergeNode in="SourceGraphic"/>
+        </feMerge>
+      </filter>
+      <path id="formaIlha" d="M -32 4 C -34 -11 -20 -23 -3 -21 C 15 -19 32 -9 30 7 C 28 21 12 26 -5 25 C -21 24 -30 18 -32 4 Z"/>
+    </defs>
+    <rect x="0" y="0" width="400" height="620" fill="url(#fundoAgua)" filter="url(#relevoMapa)"/>
+    <rect x="0" y="0" width="400" height="620" fill="url(#veiosAgua)"/>
+    <rect x="0" y="0" width="400" height="620" filter="url(#texturaPapel)"/>
+
+    <rect x="0" y="0" width="400" height="620" fill="url(#vinheta)"/>
+
+    <g opacity="0.5" stroke="#d9b354" stroke-width="1" stroke-dasharray="0.5 5">
+      <line x1="20" y1="0" x2="20" y2="620"/>
+      <line x1="380" y1="0" x2="380" y2="620"/>
+    </g>
+
+    <circle cx="345" cy="45" r="22" fill="none" stroke="#d9b354" stroke-width="1" opacity="0.4"/>
+    <path d="M 345 27 L 345 63 M 327 45 L 363 45" stroke="#d9b354" stroke-width="1" opacity="0.4"/>
+    <path d="M 345 33 L 349 45 L 345 57 L 341 45 Z" fill="#d9b354" opacity="0.3"/>
+
+    <g opacity="0.32" stroke="#6fa3c9" stroke-width="1" fill="none">
+      <path d="M 40 200 q 12 -6 24 0 t 24 0"/>
+      <path d="M 300 320 q 12 -6 24 0 t 24 0"/>
+      <path d="M 55 400 q 12 -6 24 0 t 24 0"/>
+      <path d="M 290 520 q 12 -6 24 0 t 24 0"/>
+    </g>
+
+    <g opacity="0.4" fill="#6fa3c9" font-family="Cormorant Garamond,serif" font-size="9">
+      <text x="52" y="150">18</text>
+      <text x="330" y="230">27</text>
+      <text x="60" y="340">12</text>
+      <text x="310" y="470">31</text>
+      <text x="45" y="560">9</text>
+    </g>
+
+    <g opacity="0.35" stroke="#d9b354" stroke-width="1" fill="none">
+      <path d="M 55 100 q -6 5 0 10 q 6 5 0 10" stroke-width="0.8"/>
+      <path d="M 355 500 q -6 5 0 10 q 6 5 0 10" stroke-width="0.8"/>
+    </g>
+
+    <path d="M 200 560 C 130 500, 260 430, 150 350 S 280 240, 190 170 S 260 90, 200 70"
+          fill="none" stroke="#d9b354" stroke-width="2" stroke-dasharray="1 10" stroke-linecap="round" opacity="0.55"/>
+
+    <g id="estM1" class="estacao ativa" data-modulo="m1" filter="url(#relevoEstacao)">
+      <use href="#formaIlha" xlink:href="#formaIlha" fill="#13202f" stroke="#d9b354" stroke-width="2" class="ilha" transform="translate(200 560) scale(1.0)"/>
+      <use href="#formaIlha" xlink:href="#formaIlha" fill="none" stroke="#d9b354" stroke-width="0.6" opacity="0.35" transform="translate(200 560) scale(1.14)"/>
+      <text x="200" y="566" text-anchor="middle" font-family="Cormorant Garamond,serif" font-size="15" font-weight="600" fill="#d9b354">I</text>
+    </g>
+    <text x="200" y="608" text-anchor="middle" font-family="Inter,sans-serif" font-size="11" fill="#f4efe2" opacity="0.85">Raio-X do Barco</text>
+
+    <g id="estM2" class="estacao previa" data-modulo="m2" filter="url(#relevoEstacao)">
+      <use href="#formaIlha" xlink:href="#formaIlha" fill="#0d1c2a" stroke="#2e5372" stroke-width="2" class="ilha" transform="translate(150 350) scale(0.9)"/>
+      <use href="#formaIlha" xlink:href="#formaIlha" fill="none" stroke="#2e5372" stroke-width="0.6" opacity="0.35" transform="translate(150 350) scale(1.03)"/>
+      <text x="150" y="356" text-anchor="middle" font-family="Cormorant Garamond,serif" font-size="14" font-weight="600" fill="#6fa3c9">II</text>
+    </g>
+    <text x="150" y="396" text-anchor="middle" font-family="Inter,sans-serif" font-size="11" fill="#f4efe2" opacity="0.85">Diário de Captura</text>
+
+    <g id="estM3" class="estacao previa" data-modulo="m3" filter="url(#relevoEstacao)">
+      <use href="#formaIlha" xlink:href="#formaIlha" fill="#1c2820" stroke="#c9a45c" stroke-width="2" class="ilha" transform="translate(190 170) scale(0.9)"/>
+      <use href="#formaIlha" xlink:href="#formaIlha" fill="none" stroke="#c9a45c" stroke-width="0.6" opacity="0.35" transform="translate(190 170) scale(1.03)"/>
+      <text x="190" y="176" text-anchor="middle" font-family="Cormorant Garamond,serif" font-size="14" font-weight="600" fill="#c9a45c">III</text>
+    </g>
+    <text x="190" y="216" text-anchor="middle" font-family="Inter,sans-serif" font-size="11" fill="#f4efe2" opacity="0.85">Construtor de Velas</text>
+
+    <g id="estM4" class="estacao previa" data-modulo="m4" filter="url(#relevoEstacao)">
+      <use href="#formaIlha" xlink:href="#formaIlha" fill="#241c14" stroke="#8a2e2e" stroke-width="2" class="ilha" transform="translate(200 70) scale(0.9)"/>
+      <use href="#formaIlha" xlink:href="#formaIlha" fill="none" stroke="#8a2e2e" stroke-width="0.6" opacity="0.35" transform="translate(200 70) scale(1.03)"/>
+      <text x="200" y="76" text-anchor="middle" font-family="Cormorant Garamond,serif" font-size="14" font-weight="600" fill="#c17a7a">IV</text>
+    </g>
+    <text x="200" y="36" text-anchor="middle" font-family="Inter,sans-serif" font-size="11" fill="#f4efe2" opacity="0.85">Revisão dos 20 Minutos</text>
+  </svg>
+
+  <div class="legenda-mapa">
+    <div class="legenda-item"><span class="legenda-ponto on"></span>disponível</div>
+    <div class="legenda-item"><span class="legenda-ponto off"></span>ainda a caminho</div>
+  </div>
+
+  <a class="link-historico" id="linkHistorico" href="#">ver histórico completo</a>
+</div>
+
+<div class="modal-overlay" id="modalOverlay">
+  <div class="modal-previa">
+    <div class="selo-mini" id="modalSelo">próxima estação</div>
+    <h2 id="modalTitulo"></h2>
+    <p id="modalTexto"></p>
+    <div class="condicao" id="modalCondicao"></div>
+    <button id="modalBotao">Entendi</button>
+  </div>
+</div>
+
+<script>
+(function(){
+function carregar(k){ try{ return JSON.parse(localStorage.getItem(k)||'null'); }catch(e){ return null; } }
+
+var perfil = carregar('sor_perfil');
+if(!perfil || !perfil.email){
+  window.location.href = 'login.html';
+  return;
+}
+
+var m1 = carregar('sor_m1_progress');
+var m2 = carregar('sor_m2_capturas') || [];
+var m3 = carregar('sor_m3_velas') || [];
+var m4 = carregar('sor_m4_revisoes') || [];
+
+var m1Feito = !!(m1 && m1.concluido);
+var m2Qtd = m2.length;
+var m3Feito = m3.length > 0;
+var m4Feito = m4.length > 0;
+
+var estados = {
+  m1: m1Feito ? 'disponivel' : 'ativa',
+  m2: !m1Feito ? 'previa' : 'ativa',
+  m3: (m2Qtd >= 10) ? 'ativa' : 'previa',
+  m4: m1Feito ? 'ativa' : 'previa'
+};
+
+var textos = {
+  m2:{
+    titulo:'Diário de Captura',
+    texto:'Aqui você guarda, um por um, todos os "nãos" que disser daqui pra frente — a um gasto por status, a um favor abusivo, a um impulso. Cada um vira uma bandeira na sua rota.',
+    condicao:'Abre assim que você terminar o Raio-X do Barco.'
+  },
+  m3:{
+    titulo:'Construtor de Velas',
+    texto:'Três cenas do seu dia a dia. Nada de perfil, nada de teste — um espelho que devolve, nas suas próprias palavras, o medo que está por trás de como você lida com dinheiro.',
+    condicao:'Abre depois de pelo menos 10 registros no Diário de Captura. Faltam ' + Math.max(0,10-m2Qtd) + '.'
+  },
+  m4:{
+    titulo:'Revisão dos 20 Minutos',
+    texto:'Uma vez por mês, vinte minutos pra confirmar seus números, ver o que mudou de verdade, e assinar isso com você mesmo.',
+    condicao:'Abre assim que você terminar o Raio-X do Barco.'
+  }
+};
+
+['m1','m2','m3','m4'].forEach(function(mod){
+  var g = document.getElementById('est'+mod.toUpperCase());
+  g.classList.remove('ativa','previa','disponivel');
+  if(estados[mod] === 'previa') g.classList.add('previa');
+  else if(estados[mod] === 'ativa') g.classList.add('ativa');
+  else if(estados[mod] === 'disponivel') g.classList.add('disponivel');
+});
+
+if(m1Feito){
+  document.getElementById('subtituloCarta').textContent = 'seu Raio-X já está feito — a rota continua';
+}
+
+if(m1 && m1.raiox){
+  document.getElementById('streakWrap').style.display='flex';
+  document.getElementById('streakValor').textContent = (m1.streak||0);
+}
+if(m2Qtd>0){
+  var reserva = m2.reduce(function(acc,c){ return acc + (Number(c.valor)||0); },0);
+  document.getElementById('reservaWrap').style.display='block';
+  document.getElementById('reservaValor').textContent = 'R$ ' + reserva.toLocaleString('pt-BR');
+}
+
+var overlay = document.getElementById('modalOverlay');
+document.querySelectorAll('.estacao').forEach(function(el){
+  el.addEventListener('click', function(){
+    var mod = el.getAttribute('data-modulo');
+    if(mod === 'm1'){
+      window.location.href = 'm1_raiox_do_barco.html';
+      return;
+    }
+    if(estados[mod] === 'previa'){
+      var t = textos[mod];
+      document.getElementById('modalSelo').textContent = 'trancado por enquanto';
+      document.getElementById('modalTitulo').textContent = t.titulo;
+      document.getElementById('modalTexto').textContent = t.texto;
+      document.getElementById('modalCondicao').textContent = t.condicao;
+      overlay.classList.add('aberto');
+    } else {
+      var destinos = {m2:'m2_diario_de_captura.html', m3:'m3_construtor_de_velas.html', m4:'m4_revisao_20_minutos.html'};
+      window.location.href = destinos[mod];
+    }
+  });
+});
+document.getElementById('modalBotao').addEventListener('click', function(){
+  overlay.classList.remove('aberto');
+});
+overlay.addEventListener('click', function(e){
+  if(e.target === overlay) overlay.classList.remove('aberto');
+});
+
+document.getElementById('linkHistorico').addEventListener('click', function(e){
+  e.preventDefault();
+  alert('Histórico completo — tela a construir (lista cronológica dos textos gerados pela IA).');
+});
+})();
+</script>
+</body>
+</html>
