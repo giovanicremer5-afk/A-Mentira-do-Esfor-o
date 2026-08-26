@@ -1,0 +1,549 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,viewport-fit=cover">
+<title>S.O.R. — Diário de Captura</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Caveat:wght@500;600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --tinta:#0b1420; --tinta2:#13202f; --tinta3:#182838; --agua-clara:#2e5372; --agua-escura:#0d1c2a; --agua-viva:#6fa3c9;
+  --ambar:#b8922a; --ambar2:#d9b354; --branco:#f4efe2; --erro:#c1553c; --verde:#3c6e4f;
+  --reserva-paz:#d9b354;
+  --font-display:'Cormorant Garamond',serif; --font-manuscrita:'Caveat',cursive; --font-corpo:'Inter',sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:var(--font-corpo); background:var(--tinta); color:var(--branco); min-height:100vh; padding-bottom:110px;}
+button{font-family:inherit; cursor:pointer; border:none; background:none; color:inherit;}
+.tela{display:none;}
+.tela.ativa{display:block;}
+.oculto{display:none !important;}
+
+.header{padding:22px 20px 14px; display:flex; align-items:center; justify-content:space-between;}
+.header a{font-size:13px; color:rgba(244,239,226,.45); text-decoration:underline;}
+.header h1{font-family:var(--font-display); font-size:20px; font-weight:600;}
+
+.wrap{max-width:520px; margin:0 auto; padding:0 18px;}
+
+/* ---------- BARRIL — Reserva de Paz ---------- */
+.barril-card{
+  background:linear-gradient(160deg, var(--tinta3), var(--tinta2)); border:1px solid rgba(217,179,84,.2);
+  border-radius:8px; padding:22px; display:flex; align-items:center; gap:20px; margin-bottom:18px;
+}
+.barril-svg-wrap{width:64px; height:78px; flex-shrink:0; position:relative;}
+.barril-texto .valor{font-family:var(--font-display); font-size:30px; font-weight:700; color:var(--ambar2);}
+.barril-texto .rotulo{font-size:11px; text-transform:uppercase; letter-spacing:.05em; opacity:.5; margin-top:2px;}
+.barril-texto .sub{font-size:12px; opacity:.4; margin-top:6px;}
+
+/* ---------- MAPA — bandeiras plantadas ---------- */
+.mapa-card{
+  position:relative; height:150px; border-radius:8px; overflow:hidden; margin-bottom:18px;
+  background:linear-gradient(180deg, var(--agua-clara) 0%, var(--agua-escura) 100%);
+  border:1px solid rgba(217,179,84,.15);
+}
+.mapa-ondas{position:absolute; inset:0; opacity:.5;}
+.bandeira{position:absolute; bottom:8px; width:2px; height:34px; background:rgba(244,239,226,.5);}
+.bandeira::before{content:''; position:absolute; top:0; left:2px; width:12px; height:9px; background:var(--agua-viva); clip-path:polygon(0 0,100% 50%,0 100%);}
+.mapa-legenda{position:absolute; top:10px; left:14px; font-size:11px; color:rgba(244,239,226,.55); text-transform:uppercase; letter-spacing:.05em;}
+
+/* ---------- FAB ---------- */
+.fab-interceptar{
+  position:fixed; bottom:22px; left:50%; transform:translateX(-50%);
+  background:var(--agua-viva); color:var(--tinta); font-weight:700; font-size:15px;
+  padding:16px 34px; border-radius:32px; box-shadow:0 8px 26px rgba(0,0,0,.45);
+  display:flex; align-items:center; gap:9px; z-index:20;
+}
+.fab-interceptar:active{transform:translateX(-50%) scale(.96);}
+
+/* ---------- LISTA / RESUMO ---------- */
+.card{background:var(--tinta2); border:1px solid rgba(217,179,84,.15); border-radius:6px; padding:18px 20px; margin-bottom:14px;}
+.card-titulo{font-size:11px; text-transform:uppercase; letter-spacing:.08em; color:rgba(244,239,226,.45); font-weight:600; margin-bottom:10px;}
+.captura-item{display:flex; justify-content:space-between; align-items:center; padding:9px 0; border-bottom:1px solid rgba(244,239,226,.06); font-size:14px;}
+.captura-item:last-child{border-bottom:none;}
+.captura-cat{font-size:11px; color:var(--agua-viva); text-transform:uppercase; letter-spacing:.03em;}
+.captura-valor{font-weight:600; color:var(--ambar2);}
+.btn-revisao{width:100%; text-align:center; padding:13px; border:1px solid rgba(217,179,84,.25); border-radius:5px; font-size:14px; color:rgba(244,239,226,.7); margin-top:4px;}
+
+/* ---------- MODAL INTERCEPTAR ---------- */
+.overlay{position:fixed; inset:0; background:rgba(11,20,32,.9); display:none; align-items:flex-end; justify-content:center; z-index:60;}
+.overlay.aberto{display:flex;}
+.folha{
+  background:var(--tinta2); width:100%; max-width:520px; border-radius:16px 16px 0 0; padding:26px 22px 30px;
+  animation:subir .28s ease;
+}
+@keyframes subir{from{transform:translateY(40px); opacity:0;} to{transform:translateY(0); opacity:1;}}
+.folha h2{font-family:var(--font-display); font-size:22px; font-weight:600; text-align:center; margin-bottom:18px;}
+.categorias-grid{display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:18px;}
+.cat-btn{
+  border:1px solid rgba(217,179,84,.25); border-radius:6px; padding:14px 10px; text-align:center; font-size:13px;
+  transition:border-color .2s ease, background .2s ease;
+}
+.cat-btn.sel{border-color:var(--agua-viva); background:rgba(111,163,201,.15); color:var(--agua-viva); font-weight:600;}
+.campo{margin-bottom:16px;}
+.campo label{display:block; font-size:12px; opacity:.5; margin-bottom:6px; text-transform:uppercase; letter-spacing:.04em;}
+.campo input, .campo textarea{
+  width:100%; background:rgba(244,239,226,.05); border:1px solid rgba(217,179,84,.25); color:var(--branco);
+  padding:12px 14px; border-radius:5px; font-size:16px; font-family:inherit;
+}
+.campo textarea{resize:none; height:60px;}
+.btn-confirmar{width:100%; background:var(--agua-viva); color:var(--tinta); font-weight:700; padding:15px; border-radius:6px; font-size:15px;}
+.btn-confirmar:disabled{opacity:.35;}
+.btn-cancelar{width:100%; text-align:center; padding:10px; font-size:13px; color:rgba(244,239,226,.4); margin-top:8px;}
+
+/* ---------- CONFIRMAÇÃO INSTANTÂNEA ---------- */
+.confirmacao{
+  position:fixed; inset:0; background:var(--tinta); z-index:70; display:none;
+  flex-direction:column; align-items:center; justify-content:center; text-align:center; padding:30px; gap:14px;
+}
+.confirmacao.aberto{display:flex;}
+.confirmacao .bandeira-anim{font-size:52px; animation:fincar .5s ease;}
+@keyframes fincar{0%{transform:translateY(-20px) scale(.5); opacity:0;} 60%{transform:translateY(4px) scale(1.1);} 100%{transform:translateY(0) scale(1); opacity:1;}}
+.confirmacao .frase{font-family:var(--font-display); font-size:22px; font-weight:600; max-width:340px; line-height:1.35;}
+.confirmacao .reserva-atualizada{font-size:14px; color:var(--ambar2); margin-top:6px;}
+
+/* ---------- PROJEÇÃO 5 ANOS ---------- */
+.projecao{
+  position:fixed; inset:0; background:radial-gradient(ellipse at 50% 30%, var(--agua-clara), var(--tinta) 75%);
+  z-index:70; display:none; flex-direction:column; align-items:center; justify-content:center; text-align:center; padding:32px; gap:16px;
+}
+.projecao.aberto{display:flex;}
+.projecao .selo{font-family:var(--font-manuscrita); font-size:16px; color:var(--ambar2);}
+.projecao .valor-grande{font-family:var(--font-display); font-size:44px; font-weight:700; color:var(--ambar2);}
+.projecao p{max-width:360px; font-size:14px; color:rgba(244,239,226,.65); line-height:1.6;}
+.projecao button{background:var(--ambar); color:var(--tinta); font-weight:600; padding:12px 30px; border-radius:5px; margin-top:8px;}
+
+/* ---------- REVISÃO NOTURNA ---------- */
+.revisao-bloco{margin-bottom:22px;}
+.revisao-titulo{font-family:var(--font-display); font-size:17px; font-weight:600; margin-bottom:10px;}
+.checkin-opcoes{display:flex; gap:8px;}
+.checkin-opcoes button{flex:1; padding:12px; border:1px solid rgba(217,179,84,.25); border-radius:5px; font-size:13px;}
+.checkin-opcoes button.sel{border-color:var(--agua-viva); background:rgba(111,163,201,.15); color:var(--agua-viva); font-weight:600;}
+.checklist-item{display:flex; align-items:center; gap:10px; padding:10px 0; font-size:14px; border-bottom:1px solid rgba(244,239,226,.06);}
+.checklist-item:last-child{border-bottom:none;}
+.checklist-marca{width:20px; height:20px; border:1.5px solid rgba(217,179,84,.4); border-radius:3px; flex-shrink:0; display:flex; align-items:center; justify-content:center; font-size:12px;}
+.checklist-item.sel .checklist-marca{background:var(--agua-viva); border-color:var(--agua-viva); color:var(--tinta);}
+</style>
+</head>
+<body>
+
+<!-- ============================================================
+     TELA PRINCIPAL — Mapa + Barril + FAB
+============================================================ -->
+<div class="tela ativa" id="t-principal">
+  <div class="header">
+    <a href="0_hub_mapa.html">← Mapa do Leitor</a>
+    <h1>Diário de Captura</h1>
+    <span style="width:80px;"></span>
+  </div>
+  <div class="wrap">
+    <div class="barril-card">
+      <div class="barril-svg-wrap" id="barrilSvgWrap"></div>
+      <div class="barril-texto">
+        <div class="valor" id="reservaPazValor">R$ 0</div>
+        <div class="rotulo">Reserva de Paz</div>
+        <div class="sub" id="reservaPazSub"></div>
+      </div>
+    </div>
+
+    <div class="mapa-card" id="mapaCard">
+      <div class="mapa-legenda">Sua rota</div>
+    </div>
+
+    <div class="card">
+      <div class="card-titulo">Hoje</div>
+      <div id="listaHoje"></div>
+    </div>
+
+    <button class="btn-revisao" id="btnAbrirRevisao">🌙 Revisão da noite</button>
+  </div>
+</div>
+
+<button class="fab-interceptar" id="btnAbrirInterceptar"><span>⚓</span> Interceptar</button>
+
+<!-- ============================================================
+     MODAL — Interceptar (fluxo principal, ~8-10s)
+============================================================ -->
+<div class="overlay" id="overlayInterceptar">
+  <div class="folha">
+    <h2>O que você acabou de recusar?</h2>
+    <div class="categorias-grid" id="categoriasGrid"></div>
+    <div class="campo">
+      <label>Valor economizado</label>
+      <input type="number" id="inputValor" inputmode="decimal" placeholder="0" min="0">
+    </div>
+    <div class="campo">
+      <label>Detalhe (opcional)</label>
+      <textarea id="inputDescricao" placeholder="Uma frase, se quiser"></textarea>
+    </div>
+    <button class="btn-confirmar" id="btnConfirmarInterceptar" disabled>Confirmar</button>
+    <button class="btn-cancelar" id="btnCancelarInterceptar">cancelar</button>
+  </div>
+</div>
+
+<!-- ============================================================
+     CONFIRMAÇÃO INSTANTÂNEA — recompensa emocional na hora
+============================================================ -->
+<div class="confirmacao" id="telaConfirmacao">
+  <div class="bandeira-anim">🚩</div>
+  <div class="frase" id="fraseConfirmacao"></div>
+  <div class="reserva-atualizada" id="reservaAtualizadaTexto"></div>
+</div>
+
+<!-- ============================================================
+     PROJEÇÃO DE 5 ANOS — dispara a cada 10 interceptações
+============================================================ -->
+<div class="projecao" id="telaProjecao">
+  <div class="selo">Se você mantiver esse ritmo…</div>
+  <div class="valor-grande" id="projecaoValor">R$ 0</div>
+  <p>é o que sua Reserva de Paz pode representar em 5 anos. Não é promessa — é a mesma direção que você já está seguindo, só que mais longe.</p>
+  <button id="btnFecharProjecao">Voltar ao Diário</button>
+</div>
+
+<!-- ============================================================
+     TELA — Revisão da Noite (fundida: check-in + Dividendo + micro-hábito)
+============================================================ -->
+<div class="tela" id="t-revisao">
+  <div class="header">
+    <button id="btnFecharRevisao" style="font-size:13px;color:rgba(244,239,226,.45);text-decoration:underline;">← voltar</button>
+    <h1>Revisão da noite</h1>
+    <span style="width:60px;"></span>
+  </div>
+  <div class="wrap">
+    <div class="revisao-bloco">
+      <div class="revisao-titulo">Como foi o dia, no geral?</div>
+      <div class="checkin-opcoes" id="checkinOpcoes">
+        <button data-tipo="checkin_tranquilo">Tranquilo</button>
+        <button data-tipo="checkin_resisti">Resisti</button>
+        <button data-tipo="checkin_cedi">Cedi</button>
+      </div>
+    </div>
+
+    <div class="revisao-bloco">
+      <div class="revisao-titulo">Dividendo Psicológico</div>
+      <div class="card" style="margin-bottom:0;">
+        <div class="checklist-item" data-nao="favor_abusivo"><div class="checklist-marca"></div> Recusei um favor abusivo</div>
+        <div class="checklist-item" data-nao="notificacao_silenciada"><div class="checklist-marca"></div> Silenciei uma notificação que só gerava ansiedade</div>
+        <div class="checklist-item" data-nao="negociacao_ruim"><div class="checklist-marca"></div> Não aceitei uma condição ruim numa negociação</div>
+      </div>
+    </div>
+
+    <div class="revisao-bloco" id="blocoMicroHabito" style="display:none;">
+      <div class="revisao-titulo">Seu micro-hábito da semana</div>
+      <div class="card" style="margin-bottom:0;">
+        <div class="checklist-item" id="itemMicroHabito"><div class="checklist-marca"></div> <span id="textoMicroHabito"></span></div>
+      </div>
+    </div>
+
+    <button class="btn-confirmar" id="btnSalvarRevisao">Salvar revisão</button>
+  </div>
+</div>
+
+<script>
+(function(){
+'use strict';
+
+/* ============================================================
+   PERSISTÊNCIA — localStorage hoje, mesmas chaves/campos do
+   schema Supabase (m2_capturas, m2_nao_dividendo).
+============================================================ */
+function carregar(chave, padrao){
+  try{ var raw = localStorage.getItem(chave); return raw ? JSON.parse(raw) : padrao; }catch(e){ return padrao; }
+}
+function salvar(chave, valor){
+  try{ localStorage.setItem(chave, JSON.stringify(valor)); }catch(e){}
+}
+var capturas = carregar('sor_m2_capturas', []);
+var naoDividendo = carregar('sor_m2_nao_dividendo', []);
+var m3Velas = carregar('sor_m3_velas', []);
+
+var CATEGORIAS = [
+  {id:'gasto_status', label:'Gasto por status'},
+  {id:'favor_abusivo', label:'Favor abusivo'},
+  {id:'impulso_emocional', label:'Impulso emocional'},
+  {id:'pressao_social', label:'Pressão social'}
+];
+
+var FRASES_CONFIRMACAO = [
+  'Você remou contra a maré hoje.',
+  'Isso fica. Ninguém tira essa de você.',
+  'Mais um "não" que virou lastro.',
+  'A maré empurra — você segurou o leme.',
+  'Pequeno agora. Peso real depois.'
+];
+
+/* ============================================================
+   CÁLCULOS — Matemática Fria (mesma lógica de calculos_matematica_fria.js)
+============================================================ */
+function calcularReservaDePaz(caps){
+  return (caps||[]).filter(function(c){return c.tipo_registro==='interceptacao';})
+    .reduce(function(s,c){return s+(Number(c.valor)||0);},0);
+}
+function calcularProjecao5Anos(reservaAtual, diasDesdeInicio){
+  var dias = Math.max(1, diasDesdeInicio||1);
+  var media = reservaAtual/dias;
+  return Math.round(media*365*5*100)/100;
+}
+function fmtBRL(v){ return 'R$ ' + Math.round(Number(v)||0).toLocaleString('pt-BR'); }
+
+function diasDesdeInicio(){
+  if(capturas.length===0) return 1;
+  var datas = capturas.map(function(c){return new Date(c.created_at).getTime();});
+  var primeiro = Math.min.apply(null, datas);
+  var dias = Math.ceil((Date.now()-primeiro)/(1000*60*60*24));
+  return Math.max(1, dias);
+}
+
+/* ============================================================
+   RENDER — barril, mapa, lista
+============================================================ */
+function renderBarril(){
+  var reserva = calcularReservaDePaz(capturas);
+  document.getElementById('reservaPazValor').textContent = fmtBRL(reserva);
+  var total = capturas.filter(function(c){return c.tipo_registro==='interceptacao';}).length;
+  document.getElementById('reservaPazSub').textContent = total + ' interceptações registradas';
+  renderBarrilSvg(reserva);
+}
+function renderBarrilSvg(reserva){
+  // Preenchimento visual simples — escala logarítmica pra não estourar com valores altos
+  var pct = Math.min(1, Math.log10(reserva+1) / Math.log10(20000));
+  var wrap = document.getElementById('barrilSvgWrap');
+  var alturaPreenchida = Math.round(pct*62);
+  wrap.innerHTML =
+    '<svg viewBox="0 0 64 78" width="100%" height="100%">'+
+    '<rect x="8" y="8" width="48" height="64" rx="6" fill="none" stroke="rgba(217,179,84,.35)" stroke-width="2"/>'+
+    '<clipPath id="barrilClip"><rect x="8" y="8" width="48" height="64" rx="6"/></clipPath>'+
+    '<rect x="8" y="'+(72-alturaPreenchida)+'" width="48" height="'+alturaPreenchida+'" fill="var(--reserva-paz)" opacity="0.75" clip-path="url(#barrilClip)"/>'+
+    '<ellipse cx="32" cy="8" rx="24" ry="4" fill="none" stroke="rgba(217,179,84,.35)" stroke-width="2"/>'+
+    '</svg>';
+}
+function renderMapa(){
+  var card = document.getElementById('mapaCard');
+  var svgNS = 'http://www.w3.org/2000/svg';
+  var svg = document.createElementNS(svgNS,'svg');
+  svg.setAttribute('viewBox','0 0 320 150'); svg.style.width='100%'; svg.style.height='100%'; svg.style.position='absolute'; svg.style.inset='0';
+  var interceptacoes = capturas.filter(function(c){return c.tipo_registro==='interceptacao';});
+  var ultimas = interceptacoes.slice(-14);
+  ultimas.forEach(function(c, i){
+    var x = 20 + i*(280/Math.max(1,ultimas.length-1||1));
+    var y = 90 + Math.sin(i*0.7)*18;
+    var g = document.createElementNS(svgNS,'g');
+    var mastro = document.createElementNS(svgNS,'rect');
+    mastro.setAttribute('x',x); mastro.setAttribute('y',y-30); mastro.setAttribute('width','2'); mastro.setAttribute('height','34');
+    mastro.setAttribute('fill','rgba(244,239,226,.5)');
+    var flag = document.createElementNS(svgNS,'path');
+    flag.setAttribute('d','M'+(x+2)+','+(y-30)+' L'+(x+14)+','+(y-25)+' L'+(x+2)+','+(y-20)+' Z');
+    flag.setAttribute('fill','#d9b354');
+    g.appendChild(mastro); g.appendChild(flag);
+    svg.appendChild(g);
+  });
+  var existente = card.querySelector('svg'); if(existente) existente.remove();
+  card.appendChild(svg);
+}
+function renderLista(){
+  var el = document.getElementById('listaHoje');
+  var hoje = new Date().toDateString();
+  var doDia = capturas.filter(function(c){ return new Date(c.created_at).toDateString()===hoje; });
+  var interceptacoesHoje = doDia.filter(function(c){ return c.tipo_registro==='interceptacao'; });
+  if(interceptacoesHoje.length===0){
+    var mensagem = doDia.length>0
+      ? 'Revisão de hoje salva — nenhuma interceptação registrada ainda.'
+      : 'Nada registrado ainda hoje. O primeiro "não" está esperando.';
+    el.innerHTML = '<div style="text-align:center;font-size:14px;color:rgba(244,239,226,.5);font-style:italic;padding:8px 0;">'+mensagem+'</div>';
+    return;
+  }
+  var catMap = {}; CATEGORIAS.forEach(function(c){ catMap[c.id]=c.label; });
+  el.innerHTML = interceptacoesHoje.slice().reverse().map(function(c){
+    return '<div class="captura-item"><span class="captura-cat">'+(catMap[c.categoria]||'—')+'</span><span class="captura-valor">'+fmtBRL(c.valor)+'</span></div>';
+  }).join('');
+}
+function renderTudo(){ renderBarril(); renderMapa(); renderLista(); }
+renderTudo();
+
+/* ============================================================
+   MODAL — Interceptar
+============================================================ */
+var categoriaSelecionada = null;
+function montarCategorias(){
+  var grid = document.getElementById('categoriasGrid');
+  grid.innerHTML = CATEGORIAS.map(function(c){
+    return '<button class="cat-btn" data-id="'+c.id+'">'+c.label+'</button>';
+  }).join('');
+  grid.querySelectorAll('.cat-btn').forEach(function(btn){
+    btn.addEventListener('click', function(){
+      grid.querySelectorAll('.cat-btn').forEach(function(b){ b.classList.remove('sel'); });
+      btn.classList.add('sel');
+      categoriaSelecionada = btn.getAttribute('data-id');
+      validarFormulario();
+    });
+  });
+}
+montarCategorias();
+
+var inputValor = document.getElementById('inputValor');
+var btnConfirmar = document.getElementById('btnConfirmarInterceptar');
+function validarFormulario(){
+  btnConfirmar.disabled = !(categoriaSelecionada && Number(inputValor.value) > 0);
+}
+inputValor.addEventListener('input', validarFormulario);
+
+document.getElementById('btnAbrirInterceptar').addEventListener('click', function(){
+  document.getElementById('overlayInterceptar').classList.add('aberto');
+});
+document.getElementById('btnCancelarInterceptar').addEventListener('click', fecharModalInterceptar);
+function fecharModalInterceptar(){
+  document.getElementById('overlayInterceptar').classList.remove('aberto');
+  categoriaSelecionada = null;
+  inputValor.value=''; document.getElementById('inputDescricao').value='';
+  document.querySelectorAll('.cat-btn').forEach(function(b){ b.classList.remove('sel'); });
+  validarFormulario();
+}
+
+btnConfirmar.addEventListener('click', function(){
+  var registro = {
+    tipo_registro:'interceptacao',
+    categoria: categoriaSelecionada,
+    descricao: document.getElementById('inputDescricao').value || null,
+    valor: Number(inputValor.value),
+    praticou_habito:false,
+    criado_offline: !navigator.onLine, // fila offline: já grava local, sincroniza depois (ver nota no fim)
+    created_at: new Date().toISOString()
+  };
+  capturas.push(registro);
+  salvar('sor_m2_capturas', capturas);
+  fecharModalInterceptar();
+  mostrarConfirmacao(registro);
+});
+
+/* ============================================================
+   CONFIRMAÇÃO INSTANTÂNEA + PROJEÇÃO AUTOMÁTICA (a cada 10)
+============================================================ */
+function mostrarConfirmacao(registro){
+  var frase = FRASES_CONFIRMACAO[Math.floor(Math.random()*FRASES_CONFIRMACAO.length)];
+  document.getElementById('fraseConfirmacao').textContent = frase;
+  var reserva = calcularReservaDePaz(capturas);
+  document.getElementById('reservaAtualizadaTexto').textContent = 'Reserva de Paz agora: '+fmtBRL(reserva);
+  document.getElementById('telaConfirmacao').classList.add('aberto');
+  if(navigator.vibrate) navigator.vibrate(10);
+
+  setTimeout(function(){
+    document.getElementById('telaConfirmacao').classList.remove('aberto');
+    renderTudo();
+    var total = capturas.filter(function(c){return c.tipo_registro==='interceptacao';}).length;
+    if(total>0 && total%10===0){
+      mostrarProjecao();
+    }
+  }, 1400);
+}
+
+function mostrarProjecao(){
+  var reserva = calcularReservaDePaz(capturas);
+  var projecao = calcularProjecao5Anos(reserva, diasDesdeInicio());
+  document.getElementById('projecaoValor').textContent = fmtBRL(projecao);
+  document.getElementById('telaProjecao').classList.add('aberto');
+}
+document.getElementById('btnFecharProjecao').addEventListener('click', function(){
+  document.getElementById('telaProjecao').classList.remove('aberto');
+});
+
+/* ============================================================
+   REVISÃO DA NOITE — check-in + Dividendo + micro-hábito
+============================================================ */
+var checkinSelecionado = null;
+document.getElementById('btnAbrirRevisao').addEventListener('click', function(){
+  document.querySelectorAll('.tela').forEach(function(t){t.classList.remove('ativa');});
+  document.getElementById('t-revisao').classList.add('ativa');
+  montarMicroHabito();
+});
+document.getElementById('btnFecharRevisao').addEventListener('click', function(){
+  document.querySelectorAll('.tela').forEach(function(t){t.classList.remove('ativa');});
+  document.getElementById('t-principal').classList.add('ativa');
+});
+
+document.querySelectorAll('#checkinOpcoes button').forEach(function(btn){
+  btn.addEventListener('click', function(){
+    document.querySelectorAll('#checkinOpcoes button').forEach(function(b){b.classList.remove('sel');});
+    btn.classList.add('sel');
+    checkinSelecionado = btn.getAttribute('data-tipo');
+  });
+});
+
+document.querySelectorAll('.checklist-item[data-nao]').forEach(function(item){
+  item.addEventListener('click', function(){
+    item.classList.toggle('sel');
+    item.querySelector('.checklist-marca').textContent = item.classList.contains('sel') ? '✓' : '';
+  });
+});
+
+function montarMicroHabito(){
+  // Só aparece se já existir um ciclo do M3 com micro-hábito registrado (ainda não construído)
+  var ultimaVela = m3Velas[m3Velas.length-1];
+  var bloco = document.getElementById('blocoMicroHabito');
+  if(ultimaVela && ultimaVela.micro_habito){
+    bloco.style.display='block';
+    document.getElementById('textoMicroHabito').textContent = ultimaVela.micro_habito;
+  } else {
+    bloco.style.display='none';
+  }
+}
+
+document.getElementById('btnSalvarRevisao').addEventListener('click', function(){
+  if(checkinSelecionado){
+    capturas.push({
+      tipo_registro: checkinSelecionado,
+      categoria:null, descricao:null, valor:null, praticou_habito:false,
+      criado_offline: !navigator.onLine,
+      created_at: new Date().toISOString()
+    });
+  }
+  document.querySelectorAll('.checklist-item[data-nao].sel').forEach(function(item){
+    naoDividendo.push({ tipo_nao:item.getAttribute('data-nao'), created_at:new Date().toISOString() });
+  });
+  var itemHabito = document.getElementById('itemMicroHabito');
+  if(itemHabito.classList.contains('sel')){
+    var ultimaVela = m3Velas[m3Velas.length-1];
+    if(ultimaVela){
+      // marca praticou_habito=true na última interceptação do dia, refletindo no cruzamento do M4 depois
+      var doDia = capturas.filter(function(c){ return c.tipo_registro==='interceptacao' && new Date(c.created_at).toDateString()===new Date().toDateString(); });
+      if(doDia.length) doDia[doDia.length-1].praticou_habito = true;
+    }
+  }
+  salvar('sor_m2_capturas', capturas);
+  salvar('sor_m2_nao_dividendo', naoDividendo);
+
+  checkinSelecionado=null;
+  document.querySelectorAll('#checkinOpcoes button').forEach(function(b){b.classList.remove('sel');});
+  document.querySelectorAll('.checklist-item').forEach(function(i){ i.classList.remove('sel'); i.querySelector('.checklist-marca').textContent=''; });
+
+  document.querySelectorAll('.tela').forEach(function(t){t.classList.remove('ativa');});
+  document.getElementById('t-principal').classList.add('ativa');
+  renderTudo();
+});
+document.getElementById('itemMicroHabito').addEventListener('click', function(){
+  this.classList.toggle('sel');
+  this.querySelector('.checklist-marca').textContent = this.classList.contains('sel') ? '✓' : '';
+});
+
+/* ============================================================
+   NOTA — FILA OFFLINE
+   Hoje tudo grava direto no localStorage (funciona sem internet
+   por natureza). Em produção, trocar salvar('sor_m2_capturas',...)
+   por: (1) grava local imediatamente — igual já faz aqui — e
+   (2) dispara upsert no Supabase; se falhar por falta de rede,
+   marca criado_offline=true (já implementado) e tenta de novo
+   automaticamente quando o evento 'online' disparar, sem ação
+   do leitor.
+============================================================ */
+window.addEventListener('online', function(){
+  var pendentes = capturas.filter(function(c){ return c.criado_offline; });
+  if(pendentes.length){
+    // Aqui entraria o loop de sync real com Supabase.
+    pendentes.forEach(function(c){ c.criado_offline = false; });
+    salvar('sor_m2_capturas', capturas);
+  }
+});
+
+})();
+</script>
+</body>
+</html>
