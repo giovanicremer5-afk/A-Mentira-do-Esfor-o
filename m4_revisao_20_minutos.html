@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,viewport-fit=cover">
+<title>S.O.R. — Revisão dos 20 Minutos</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Caveat:wght@500;600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+<style>
+:root{
+  --papel:#ece0c4; --papel2:#e2d3ac; --papel3:#d9c795; --tinta:#2a2118; --tinta-clara:#5c4f3d;
+  --selo:#8a2e2e; --ambar:#96731f; --verde:#3c6e4f; --linha:rgba(42,33,24,.18);
+  --font-display:'Cormorant Garamond',serif; --font-manuscrita:'Caveat',cursive; --font-corpo:'Inter',sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{
+  font-family:var(--font-corpo); color:var(--tinta); min-height:100vh;
+  background:
+    radial-gradient(ellipse at 15% 0%, rgba(150,115,31,.08), transparent 40%),
+    radial-gradient(ellipse at 90% 100%, rgba(150,115,31,.07), transparent 45%),
+    var(--papel);
+}
+button{font-family:inherit; cursor:pointer; border:none; background:none; color:inherit;}
+.tela{display:none; min-height:100vh; flex-direction:column;}
+.tela.ativa{display:flex;}
+a{color:var(--tinta-clara);}
+
+.link-topo{padding:16px 20px; font-size:12px; color:var(--tinta-clara); text-decoration:underline;}
+.doc{max-width:600px; margin:0 auto; padding:0 24px 60px; width:100%;}
+
+/* ---------- CABEÇALHO DO DOCUMENTO ---------- */
+.doc-cabecalho{text-align:center; padding:20px 0 30px; border-bottom:1.5px solid var(--linha); margin-bottom:30px;}
+.doc-selo{font-family:var(--font-manuscrita); font-size:16px; color:var(--ambar);}
+.doc-titulo{font-family:var(--font-display); font-size:32px; font-weight:700; margin-top:4px;}
+.doc-sub{font-size:13px; color:var(--tinta-clara); margin-top:6px;}
+
+/* ---------- SEÇÃO DO DOCUMENTO ---------- */
+.secao{margin-bottom:36px;}
+.secao-titulo{
+  font-size:11px; text-transform:uppercase; letter-spacing:.08em; color:var(--ambar); font-weight:700;
+  border-bottom:1px solid var(--linha); padding-bottom:8px; margin-bottom:16px;
+}
+.linha-dado{display:flex; justify-content:space-between; align-items:baseline; padding:8px 0; border-bottom:1px dotted var(--linha); font-size:15px;}
+.linha-dado .rotulo{color:var(--tinta-clara);}
+.linha-dado .valor{font-family:var(--font-display); font-weight:700; font-size:17px;}
+.linha-dado .valor.editavel{border-bottom:1px solid var(--ambar); padding:2px 4px;}
+.linha-dado input{
+  font-family:var(--font-display); font-weight:700; font-size:17px; text-align:right; background:transparent;
+  border:none; border-bottom:1px solid var(--ambar); color:var(--tinta); width:130px; padding:2px 4px;
+}
+
+.destaque-numeros{display:grid; grid-template-columns:repeat(3,1fr); gap:14px; margin:20px 0;}
+.destaque-item{text-align:center; padding:14px 6px; border:1px solid var(--linha); border-radius:2px;}
+.destaque-item .valor{font-family:var(--font-display); font-size:22px; font-weight:700;}
+.destaque-item .rotulo{font-size:10px; text-transform:uppercase; letter-spacing:.04em; color:var(--tinta-clara); margin-top:4px;}
+.zona-selo{display:inline-block; margin-top:10px; padding:5px 14px; border-radius:2px; font-size:11px; font-weight:700; letter-spacing:.05em; text-transform:uppercase;}
+.zona-1{background:#c1553c; color:#fff;} .zona-2{background:var(--ambar); color:#fff;} .zona-3{background:var(--verde); color:#fff;}
+
+/* ---------- ESPELHO DE MENTALIDADE ---------- */
+.espelho-card{background:rgba(150,115,31,.06); border:1px solid rgba(150,115,31,.3); border-radius:2px; padding:20px 22px;}
+.espelho-card .padrao-nome{font-family:var(--font-display); font-size:19px; font-weight:700; color:var(--ambar);}
+.espelho-card p{font-size:14.5px; line-height:1.7; margin-top:10px;}
+.espelho-vazio{text-align:center; padding:20px 10px; font-size:14px; color:var(--tinta-clara); font-style:italic; line-height:1.6;}
+.categoria-barra-linha{display:flex; align-items:center; gap:10px; margin-top:6px; font-size:13px;}
+.categoria-barra-fundo{flex:1; height:6px; background:rgba(42,33,24,.1); border-radius:3px; overflow:hidden;}
+.categoria-barra-preenchida{height:100%; background:var(--ambar);}
+
+/* ---------- LASTRO ---------- */
+.lastro-input{
+  width:100%; border:none; border-bottom:1px solid var(--linha); background:transparent; padding:10px 4px;
+  font-size:15px; font-family:var(--font-corpo); color:var(--tinta); margin-bottom:4px;
+}
+.lastro-input::placeholder{color:rgba(42,33,24,.35);}
+
+/* ---------- CONTRATO ---------- */
+.contrato-texto{font-size:14.5px; line-height:1.85; color:var(--tinta);}
+.contrato-texto p{margin-bottom:14px;}
+.contrato-clausula{
+  font-style:italic; padding:14px 16px; border-left:2px solid var(--ambar); background:rgba(150,115,31,.05); margin:16px 0;
+}
+.assinatura-area{margin-top:24px;}
+.assinatura-label{font-size:12px; color:var(--tinta-clara); margin-bottom:8px;}
+#canvasAssinatura{
+  width:100%; height:120px; border:1px dashed var(--tinta-clara); border-radius:2px; touch-action:none; background:rgba(255,255,255,.3);
+}
+.assinatura-linha{display:flex; justify-content:space-between; font-size:11px; color:var(--tinta-clara); margin-top:6px;}
+.btn-limpar-assinatura{text-decoration:underline;}
+
+/* ---------- BOTÕES ---------- */
+.btn-primario{background:var(--tinta); color:var(--papel); font-weight:600; font-size:15px; padding:14px 32px; border-radius:2px;}
+.btn-primario:disabled{opacity:.35;}
+.btn-secundario{border:1px solid var(--tinta); font-size:14px; padding:12px 28px; border-radius:2px;}
+.acoes-finais{display:flex; flex-direction:column; gap:12px; align-items:center; margin-top:30px;}
+
+/* ---------- TELA DE ENTRADA ---------- */
+.entrada{justify-content:center; align-items:center; text-align:center; gap:20px; padding:44px 24px;}
+.entrada h1{font-family:var(--font-display); font-size:30px; font-weight:700; max-width:420px; line-height:1.3;}
+.entrada p{max-width:380px; font-size:14px; color:var(--tinta-clara); line-height:1.6;}
+
+/* ---------- CONFIRMAÇÃO FINAL ---------- */
+.finalizado{justify-content:center; align-items:center; text-align:center; gap:20px; padding:44px 24px;}
+.finalizado h2{font-family:var(--font-display); font-size:26px; font-weight:700; max-width:420px;}
+.finalizado .selo-assinado{
+  font-family:var(--font-manuscrita); font-size:22px; color:var(--selo); border:2px solid var(--selo); border-radius:50%;
+  width:110px; height:110px; display:flex; align-items:center; justify-content:center; transform:rotate(-8deg); line-height:1.1;
+}
+</style>
+</head>
+<body>
+
+<!-- ============================================================
+     TELA — ENTRADA
+============================================================ -->
+<div class="tela ativa entrada" id="t-entrada">
+  <div class="doc-selo">Revisão dos 20 Minutos</div>
+  <h1 id="tituloEntrada">Vinte minutos. Uma vez por mês. É isso que separa quem muda de quem só entendeu.</h1>
+  <p>Vamos confirmar seus números, ver o que mudou de verdade, e assinar isso.</p>
+  <button class="btn-primario" id="btnComecarRevisao">Começar</button>
+</div>
+
+<!-- ============================================================
+     TELA — DOCUMENTO PRINCIPAL
+============================================================ -->
+<div class="tela" id="t-documento">
+  <a class="link-topo" href="0_hub_mapa.html">← Mapa do Leitor</a>
+  <div class="doc" id="documentoConteudo">
+    <div class="doc-cabecalho">
+      <div class="doc-selo" id="mesReferencia"></div>
+      <div class="doc-titulo">Revisão dos 20 Minutos</div>
+      <div class="doc-sub">A Mentira do Esforço — Sistema Operacional da Ruptura</div>
+    </div>
+
+    <div class="secao">
+      <div class="secao-titulo">Seus números — confirme ou ajuste</div>
+      <div class="linha-dado"><span class="rotulo">Renda mensal líquida</span><input type="number" id="inputRenda"></div>
+      <div class="linha-dado"><span class="rotulo">Despesas essenciais</span><input type="number" id="inputDespesas"></div>
+      <div class="linha-dado"><span class="rotulo">Reserva líquida hoje</span><input type="number" id="inputReserva"></div>
+    </div>
+
+    <div class="secao">
+      <div class="secao-titulo">Recalculado agora</div>
+      <div style="text-align:center;">
+        <span class="zona-selo" id="zonaSelo"></span>
+      </div>
+      <div class="destaque-numeros">
+        <div class="destaque-item"><div class="valor" id="valorFolego">—</div><div class="rotulo">Fôlego</div></div>
+        <div class="destaque-item"><div class="valor" id="valorReservaPaz">—</div><div class="rotulo">Reserva de Paz</div></div>
+        <div class="destaque-item"><div class="valor" id="valorReservatorio">—</div><div class="rotulo">Reservatório</div></div>
+      </div>
+      <div class="linha-dado"><span class="rotulo">Autonomia Temporal estimada</span><span class="valor" id="valorAutonomia">—</span></div>
+    </div>
+
+    <div class="secao">
+      <div class="secao-titulo">Espelho de Mentalidade</div>
+      <div id="blocoEspelho"></div>
+    </div>
+
+    <div class="secao">
+      <div class="secao-titulo">Lastro de Retaguarda</div>
+      <p style="font-size:13.5px;color:var(--tinta-clara);margin-bottom:12px;">3 habilidades que gerariam renda em 48 horas, se precisasse.</p>
+      <input type="text" class="lastro-input" id="lastro1" placeholder="1ª habilidade">
+      <input type="text" class="lastro-input" id="lastro2" placeholder="2ª habilidade">
+      <input type="text" class="lastro-input" id="lastro3" placeholder="3ª habilidade">
+    </div>
+
+    <div class="secao">
+      <div class="secao-titulo">Contrato de Ruptura</div>
+      <div class="contrato-texto">
+        <p>Eu, ao assinar este documento, reconheço os números acima como reais — não como intenção, não como plano, como o que de fato é hoje.</p>
+        <p>Reconheço que a mentira nunca foi o esforço. Foi não saber que havia outra direção possível para ele.</p>
+        <div class="contrato-clausula" id="clausulaVariavel"></div>
+        <p>Assino isso sabendo que ele só tem valor se eu voltar aqui daqui a um mês — não para repetir a fórmula, mas para medir se algo mudou de verdade.</p>
+      </div>
+      <div class="assinatura-area">
+        <div class="assinatura-label">Assine com o dedo ou o mouse</div>
+        <canvas id="canvasAssinatura"></canvas>
+        <div class="assinatura-linha">
+          <button class="btn-limpar-assinatura" id="btnLimparAssinatura">limpar</button>
+          <span id="dataAssinatura"></span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="acoes-finais">
+    <button class="btn-primario" id="btnAssinarSalvar" disabled>Assinar e salvar</button>
+  </div>
+</div>
+
+<!-- ============================================================
+     TELA — FINALIZADO
+============================================================ -->
+<div class="tela finalizado" id="t-finalizado">
+  <div class="selo-assinado">assinado</div>
+  <h2>Revisão registrada.</h2>
+  <p style="max-width:380px;font-size:14px;color:var(--tinta-clara);line-height:1.6;">Fica guardada no seu histórico. Daqui a um mês, essa mesma tela volta a te esperar.</p>
+  <button class="btn-secundario" id="btnBaixarPdf">Baixar PDF</button>
+  <a href="0_hub_mapa.html" style="font-size:13px;text-decoration:underline;margin-top:6px;">Voltar ao Mapa do Leitor</a>
+</div>
+
+<script>
+(function(){
+'use strict';
+
+function carregar(chave, padrao){ try{ var r=localStorage.getItem(chave); return r?JSON.parse(r):padrao; }catch(e){ return padrao; } }
+function salvar(chave, valor){ try{ localStorage.setItem(chave, JSON.stringify(valor)); }catch(e){} }
+function mostrar(id){ document.querySelectorAll('.tela').forEach(function(t){t.classList.remove('ativa');}); document.getElementById(id).classList.add('ativa'); }
+function fmtBRL(v){ return 'R$ ' + Math.round(Number(v)||0).toLocaleString('pt-BR'); }
+
+var m1 = carregar('sor_m1_progress', null);
+var m2Capturas = carregar('sor_m2_capturas', []);
+var m3Velas = carregar('sor_m3_velas', []);
+var m4Revisoes = carregar('sor_m4_revisoes', []);
+
+/* ============================================================
+   MATEMÁTICA FRIA — mesma lógica de calculos_matematica_fria.js
+============================================================ */
+function calcularFolego(reservaLiquida, despesasEssenciais){
+  var despesas = Math.max(0, Number(despesasEssenciais)||0);
+  var reserva = Math.max(0, Number(reservaLiquida)||0);
+  if(despesas<=0) return {valor:0, zona:1};
+  var meses = reserva/despesas;
+  return {valor:Math.round(meses*10)/10, zona: meses<1?1:(meses<=3?2:3)};
+}
+function calcularReservaDePaz(caps){
+  return (caps||[]).filter(function(c){return c.tipo_registro==='interceptacao';}).reduce(function(s,c){return s+(Number(c.valor)||0);},0);
+}
+function calcularReservatorioImprevistos(reservaAtual, despesasEssenciais, mesesAlvo){
+  var alvo = mesesAlvo||6;
+  var necessario = Math.max(0,Number(despesasEssenciais)||0)*alvo;
+  return {necessario:necessario, faltante:Math.max(0, necessario-(Number(reservaAtual)||0))};
+}
+function calcularDataAutonomiaTemporal(reservaAtual, despesasEssenciais, aporteMedioMensal){
+  var despesas = Math.max(0, Number(despesasEssenciais)||0);
+  var aporte = Math.max(0, Number(aporteMedioMensal)||0);
+  var alvoReserva = despesas*3.1;
+  var reserva = Math.max(0, Number(reservaAtual)||0);
+  if(aporte<=0 || reserva>=alvoReserva) return null;
+  var meses = Math.ceil((alvoReserva-reserva)/aporte);
+  var d = new Date(); d.setMonth(d.getMonth()+meses);
+  return d;
+}
+function categoriaMaisRecorrente(capturasDoMes){
+  var contagem = {};
+  (capturasDoMes||[]).forEach(function(c){ if(c.categoria) contagem[c.categoria] = (contagem[c.categoria]||0)+1; });
+  var chaves = Object.keys(contagem);
+  if(!chaves.length) return {categoria:null, distribuicao:{}};
+  var top = chaves.reduce(function(a,b){ return contagem[a]>=contagem[b]?a:b; });
+  return {categoria:top, contagem:contagem[top], distribuicao:contagem};
+}
+
+var NOMES_CATEGORIA = {gasto_status:'Gasto por status', favor_abusivo:'Favor abusivo', impulso_emocional:'Impulso emocional', pressao_social:'Pressão social'};
+
+/* ============================================================
+   ENTRADA — texto varia se é a 1ª revisão ou uma recorrente
+============================================================ */
+document.getElementById('tituloEntrada').textContent = m4Revisoes.length>0
+  ? 'Mais um mês. A prova real está em comparar com o anterior, não em recomeçar do zero.'
+  : 'Vinte minutos. Uma vez por mês. É isso que separa quem muda de quem só entendeu.';
+
+document.getElementById('btnComecarRevisao').addEventListener('click', function(){
+  mostrar('t-documento');
+  preencherDocumento();
+});
+
+/* ============================================================
+   PREENCHIMENTO DO DOCUMENTO
+============================================================ */
+function preencherDocumento(){
+  var hoje = new Date();
+  document.getElementById('mesReferencia').textContent = hoje.toLocaleDateString('pt-BR', {month:'long', year:'numeric'});
+  document.getElementById('dataAssinatura').textContent = hoje.toLocaleDateString('pt-BR');
+
+  var dadosM1 = (m1 && m1.dados_financeiros) || {};
+  document.getElementById('inputRenda').value = dadosM1.renda_mensal || 0;
+  document.getElementById('inputDespesas').value = dadosM1.despesas_essenciais || 0;
+  var reservaAtualM1 = dadosM1.reserva_liquida || 0;
+  var reservaPaz = calcularReservaDePaz(m2Capturas);
+  document.getElementById('inputReserva').value = reservaAtualM1 + reservaPaz;
+
+  recalcular();
+  ['inputRenda','inputDespesas','inputReserva'].forEach(function(id){
+    document.getElementById(id).addEventListener('input', recalcular);
+  });
+
+  renderEspelho();
+  configurarAssinatura();
+  validarBotaoFinal();
+}
+
+function recalcular(){
+  var renda = Number(document.getElementById('inputRenda').value)||0;
+  var despesas = Number(document.getElementById('inputDespesas').value)||0;
+  var reserva = Number(document.getElementById('inputReserva').value)||0;
+
+  var folego = calcularFolego(reserva, despesas);
+  var nomesZona = {1:'Zona 1 — Crítica', 2:'Zona 2 — Alerta', 3:'Zona 3 — Segura'};
+  document.getElementById('zonaSelo').textContent = nomesZona[folego.zona];
+  document.getElementById('zonaSelo').className = 'zona-selo zona-'+folego.zona;
+  document.getElementById('valorFolego').textContent = folego.valor+'m';
+
+  var reservaPaz = calcularReservaDePaz(m2Capturas);
+  document.getElementById('valorReservaPaz').textContent = fmtBRL(reservaPaz);
+
+  var reservatorio = calcularReservatorioImprevistos(reserva, despesas, 6);
+  document.getElementById('valorReservatorio').textContent = fmtBRL(reservatorio.necessario - reservatorio.faltante);
+
+  var aporteMedioMensal = reservaPaz / Math.max(1, m2Capturas.length ? diasDesdeInicioM2() / 30 : 1);
+  var dataAutonomia = calcularDataAutonomiaTemporal(reserva, despesas, aporteMedioMensal);
+  document.getElementById('valorAutonomia').textContent = dataAutonomia
+    ? dataAutonomia.toLocaleDateString('pt-BR', {month:'long', year:'numeric'})
+    : (folego.zona===3 ? 'já atingida' : 'ainda sem ritmo suficiente pra estimar');
+}
+function diasDesdeInicioM2(){
+  var interceptacoes = m2Capturas.filter(function(c){return c.tipo_registro==='interceptacao';});
+  if(!interceptacoes.length) return 30;
+  var primeiro = Math.min.apply(null, interceptacoes.map(function(c){return new Date(c.created_at).getTime();}));
+  return Math.max(1, Math.ceil((Date.now()-primeiro)/(1000*60*60*24)));
+}
+
+/* ============================================================
+   ESPELHO DE MENTALIDADE — cruza padrão do M3 com categorias do M2
+   NOTA: stand-in de script; produção usa IA via montarPayloadEspelhoM4.
+============================================================ */
+function renderEspelho(){
+  var el = document.getElementById('blocoEspelho');
+  var velaRecente = m3Velas.length ? m3Velas[m3Velas.length-1] : null;
+
+  if(!velaRecente || !velaRecente.nome_padrao){
+    // Caso mais comum: mês 1, sem M3 completo ainda — normaliza como esperado, não falha
+    el.innerHTML = '<div class="espelho-vazio">Seu primeiro mês é sobre números — o espelho de mentalidade entra quando o Construtor de Velas revelar seu primeiro padrão.</div>';
+    document.getElementById('clausulaVariavel').textContent =
+      'Este mês, o compromisso é simples: manter o registro real no Diário de Captura até haver dado suficiente para um espelho de verdade.';
+    return;
+  }
+
+  var inicioMes = new Date(); inicioMes.setDate(1); inicioMes.setHours(0,0,0,0);
+  var capturasDoMes = m2Capturas.filter(function(c){ return c.tipo_registro==='interceptacao' && new Date(c.created_at) >= inicioMes; });
+  var top = categoriaMaisRecorrente(capturasDoMes);
+
+  var leitura;
+  if(capturasDoMes.length===0){
+    leitura = 'Nenhum registro novo este mês pra cruzar com "'+velaRecente.nome_padrao+'". Entender o padrão foi o primeiro passo — o próximo é registrar quando ele aparecer de novo.';
+  } else if(top.categoria){
+    leitura = 'Seu padrão nomeado foi "'+velaRecente.nome_padrao+'". Este mês, a categoria mais recorrente no Diário foi "'+(NOMES_CATEGORIA[top.categoria]||top.categoria)+'" ('+top.contagem+' de '+capturasDoMes.length+' registros). '+
+      (top.categoria==='gasto_status' || top.categoria==='pressao_social'
+        ? 'Isso ainda tem ligação direta com o que o espelho revelou — o padrão continua aparecendo na prática, não só na reflexão.'
+        : 'Isso sugere que, na prática, o comportamento apareceu de um jeito diferente do que a reflexão isolada sugeriu — vale observar essa distância no próximo ciclo do Construtor de Velas.');
+  } else {
+    leitura = 'Você registrou '+capturasDoMes.length+' interceptações este mês, mas sem categoria dominante clara — o padrão "'+velaRecente.nome_padrao+'" não tem um sinal forte pra cruzar ainda.';
+  }
+
+  el.innerHTML = '<div class="espelho-card"><div class="padrao-nome">'+velaRecente.nome_padrao+'</div><p>'+leitura+'</p></div>';
+  document.getElementById('clausulaVariavel').textContent =
+    'Este mês, o compromisso nasce direto do espelho: continuar de olho em "'+velaRecente.nome_padrao+'" — não pra eliminar num mês, mas pra reduzir a distância entre entender e agir.';
+}
+
+/* ============================================================
+   ASSINATURA — Canvas API
+============================================================ */
+var ctx, desenhando=false, assinaturaVazia=true;
+function configurarAssinatura(){
+  var canvas = document.getElementById('canvasAssinatura');
+  var dpr = window.devicePixelRatio || 1;
+  canvas.width = canvas.offsetWidth*dpr; canvas.height = canvas.offsetHeight*dpr;
+  ctx = canvas.getContext('2d');
+  ctx.scale(dpr,dpr);
+  ctx.strokeStyle = '#2a2118'; ctx.lineWidth = 2; ctx.lineCap='round';
+
+  function pos(e){
+    var rect = canvas.getBoundingClientRect();
+    var x = (e.touches?e.touches[0].clientX:e.clientX) - rect.left;
+    var y = (e.touches?e.touches[0].clientY:e.clientY) - rect.top;
+    return {x:x,y:y};
+  }
+  function iniciar(e){ desenhando=true; var p=pos(e); ctx.beginPath(); ctx.moveTo(p.x,p.y); e.preventDefault(); }
+  function mover(e){ if(!desenhando) return; var p=pos(e); ctx.lineTo(p.x,p.y); ctx.stroke(); assinaturaVazia=false; validarBotaoFinal(); e.preventDefault(); }
+  function parar(){ desenhando=false; }
+
+  canvas.addEventListener('mousedown', iniciar); canvas.addEventListener('mousemove', mover); canvas.addEventListener('mouseup', parar); canvas.addEventListener('mouseleave', parar);
+  canvas.addEventListener('touchstart', iniciar); canvas.addEventListener('touchmove', mover); canvas.addEventListener('touchend', parar);
+
+  document.getElementById('btnLimparAssinatura').addEventListener('click', function(){
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    assinaturaVazia = true;
+    validarBotaoFinal();
+  });
+}
+function validarBotaoFinal(){
+  document.getElementById('btnAssinarSalvar').disabled = assinaturaVazia;
+}
+
+/* ============================================================
+   SALVAR + GERAR PDF
+============================================================ */
+document.getElementById('btnAssinarSalvar').addEventListener('click', function(){
+  var canvas = document.getElementById('canvasAssinatura');
+  var velaRecente = m3Velas.length ? m3Velas[m3Velas.length-1] : null;
+  var mesRef = new Date(); mesRef.setDate(1);
+
+  var registro = {
+    mes_ref: mesRef.toISOString().slice(0,10),
+    reserva_paz_saldo: calcularReservaDePaz(m2Capturas),
+    reservatorio_saldo: Number(document.getElementById('valorReservatorio').textContent.replace(/\D/g,''))||0,
+    autonomia_temporal_data: document.getElementById('valorAutonomia').textContent,
+    espelho_disponivel: !!(velaRecente && velaRecente.nome_padrao),
+    espelho_padrao_ref: velaRecente ? velaRecente.nome_padrao : null,
+    lastro_habilidades: [document.getElementById('lastro1').value, document.getElementById('lastro2').value, document.getElementById('lastro3').value].filter(Boolean),
+    clausula_variavel: document.getElementById('clausulaVariavel').textContent,
+    contrato_assinado: canvas.toDataURL('image/png'),
+    created_at: new Date().toISOString()
+  };
+  m4Revisoes.push(registro);
+  salvar('sor_m4_revisoes', m4Revisoes);
+
+  document.querySelector('.acoes-finais').style.display='none';
+  document.getElementById('canvasAssinatura').style.pointerEvents='none';
+  mostrar('t-finalizado');
+});
+
+document.getElementById('btnBaixarPdf').addEventListener('click', function(){
+  mostrar('t-documento');
+  document.querySelector('.acoes-finais').style.display='none';
+  var el = document.getElementById('documentoConteudo');
+  html2pdf().set({
+    margin:10, filename:'revisao-sor-'+new Date().toISOString().slice(0,7)+'.pdf',
+    html2canvas:{scale:2}, jsPDF:{unit:'mm',format:'a4'}
+  }).from(el).save().then(function(){
+    mostrar('t-finalizado');
+  });
+});
+
+})();
+</script>
+</body>
+</html>

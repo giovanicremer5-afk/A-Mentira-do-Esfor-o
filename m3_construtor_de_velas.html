@@ -1,0 +1,726 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,viewport-fit=cover">
+<title>S.O.R. — Construtor de Velas</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500;600;700&family=Caveat:wght@500;600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --tinta:#0b1420; --tinta2:#13202f; --tinta3:#182838; --papel:#ece0c4; --papel2:#e2d3ac;
+  --ambar:#b8922a; --ambar2:#d9b354; --branco:#f4efe2; --erro:#c1553c; --verde:#3c6e4f;
+  --m3-fundo:#141d16; --m3-fundo2:#1c2820; --m3-lona:#233128; --m3-fio:#c9a45c; --m3-fio-fraco:rgba(201,164,92,.3);
+  --font-display:'Cormorant Garamond',serif; --font-manuscrita:'Caveat',cursive; --font-corpo:'Inter',sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{
+  font-family:var(--font-corpo); color:var(--branco); min-height:100vh;
+  background:
+    radial-gradient(ellipse at 15% -10%, rgba(201,164,92,.09), transparent 40%),
+    radial-gradient(ellipse at 90% 105%, rgba(201,164,92,.07), transparent 45%),
+    repeating-linear-gradient(135deg, rgba(255,255,255,.012) 0px, rgba(255,255,255,.012) 1px, transparent 1px, transparent 5px),
+    var(--m3-fundo);
+}
+button{font-family:inherit; cursor:pointer; border:none; background:none; color:inherit;}
+.tela{display:none; min-height:100vh; flex-direction:column; position:relative;}
+.tela.ativa{display:flex; animation:surgir .55s ease;}
+@keyframes surgir{from{opacity:0;} to{opacity:1;}}
+
+.header{padding:22px 20px 10px; display:flex; align-items:center; justify-content:space-between;}
+.header a{font-size:13px; color:rgba(244,239,226,.4); text-decoration:underline;}
+.header h1{font-family:var(--font-display); font-size:19px; font-weight:600;}
+.wrap{max-width:540px; margin:0 auto; padding:0 20px; width:100%;}
+
+/* ---------- TRAVADO (menos de 10 registros) ---------- */
+.travado{justify-content:center; align-items:center; text-align:center; gap:18px; padding:40px 24px;}
+.travado h2{font-family:var(--font-display); font-size:24px; font-weight:600; max-width:380px;}
+.travado p{max-width:360px; font-size:14px; color:rgba(244,239,226,.6); line-height:1.6;}
+.contador-visual{display:flex; gap:5px;}
+.contador-visual span{width:22px; height:5px; border-radius:3px; background:rgba(244,239,226,.12);}
+.contador-visual span.feito{background:var(--m3-fio);}
+.btn-primario{background:var(--m3-fio); color:var(--m3-fundo); font-weight:600; font-size:15px; padding:14px 32px; border-radius:4px;}
+
+/* ---------- ABERTURA DO CICLO ---------- */
+.abertura-ciclo{justify-content:center; align-items:center; text-align:center; gap:20px; padding:40px 24px; position:relative;}
+.abertura-ciclo::before{
+  content:''; position:absolute; top:18%; left:50%; transform:translateX(-50%); width:120px; height:120px;
+  border:1.5px dashed var(--m3-fio-fraco); border-radius:50%; opacity:.5;
+}
+.abertura-ciclo h1{font-family:var(--font-display); font-size:28px; font-weight:600; max-width:440px; line-height:1.3; position:relative;}
+.abertura-ciclo p{max-width:420px; font-size:14px; color:rgba(244,239,226,.6); line-height:1.65; position:relative;}
+
+/* ---------- CENAS ---------- */
+/* ---------- NAVEGAÇÃO — sem header genérico de card ---------- */
+.link-voltar-mapa{position:absolute; top:18px; left:18px; font-size:12px; color:rgba(244,239,226,.35); text-decoration:underline; z-index:5;}
+
+/* ---------- TECELAGEM — vela viva, visível durante as 3 cenas ---------- */
+.tecelagem-wrap{display:flex; flex-direction:column; align-items:center; padding:36px 20px 4px; gap:14px;}
+.tecelagem-svg{width:96px; height:108px;}
+.cena-progresso{display:flex; gap:6px; justify-content:center;}
+.cena-progresso span{width:8px; height:8px; border-radius:50%; background:rgba(244,239,226,.15);}
+.cena-progresso span.ativo{background:var(--m3-fio); transform:scale(1.3);}
+.cena-progresso span.feito{background:var(--m3-fio); opacity:.5;}
+.cena-corpo{flex:1; display:flex; flex-direction:column; justify-content:center; gap:22px; padding:16px 0 44px;}
+.cena-eyebrow{font-family:var(--font-manuscrita); font-size:17px; color:var(--m3-fio); text-align:center;}
+.cena-texto{font-family:var(--font-display); font-size:23px; font-weight:600; line-height:1.42; text-align:center;}
+.cena-resposta textarea{
+  width:100%; min-height:100px; background:transparent; border:none; outline:none;
+  color:var(--branco); padding:4px 6px; font-size:17px; font-family:var(--font-display); font-style:italic;
+  resize:none; line-height:1.6; text-align:center;
+}
+.linha-escrita{width:60%; height:1px; background:var(--m3-fio-fraco); margin:0 auto;}
+.cena-hint{font-size:12px; color:rgba(244,239,226,.4); margin-top:8px; min-height:16px; text-align:center;}
+.cena-hint.aviso{color:var(--m3-fio);}
+.cena-nav{display:flex; justify-content:center; align-items:center;}
+
+/* ---------- FILTRO DO MEDO BEM VESTIDO ---------- */
+.filtro{flex:1; display:flex; flex-direction:column; justify-content:center; gap:18px; padding:20px 0 40px;}
+.filtro h2{font-family:var(--font-display); font-size:24px; font-weight:600; text-align:center;}
+.filtro p.sub{text-align:center; font-size:14px; color:rgba(244,239,226,.55); max-width:420px; margin:0 auto;}
+.desculpa-item{
+  border:none; border-bottom:1.5px dashed var(--m3-fio-fraco); border-radius:0; padding:16px 6px; font-size:16px;
+  font-family:var(--font-display); font-style:italic; text-align:center;
+  transition:border-color .4s ease, background .4s ease, transform .3s ease;
+}
+.desculpa-item.marcada{border-bottom-color:var(--m3-fio); border-bottom-style:solid; background:rgba(201,164,92,.06); transform:scale(.98);}
+.resposta-desculpa{
+  font-size:12px; color:var(--m3-fio); font-style:normal; font-family:var(--font-corpo); margin-top:4px; max-height:0; overflow:hidden;
+  transition:max-height .4s ease, opacity .4s ease; opacity:0; text-transform:uppercase; letter-spacing:.04em;
+}
+.resposta-desculpa.vis{max-height:60px; opacity:1;}
+
+/* ---------- REVELAÇÃO — vela sendo costurada ---------- */
+.revelando{justify-content:center; align-items:center; text-align:center; gap:16px;}
+.revelando .anel{width:44px;height:44px;border:2px solid var(--m3-fio-fraco); border-top-color:var(--m3-fio); border-radius:50%; animation:girar 1s linear infinite;}
+@keyframes girar{to{transform:rotate(360deg);}}
+.revelando p{font-size:14px; color:rgba(244,239,226,.55); font-style:italic;}
+
+/* ---------- RESULTADO — vela batizada, com cerimônia ---------- */
+.resultado{
+  padding:0; align-items:center; gap:0;
+  background:radial-gradient(ellipse at 50% 8%, rgba(201,164,92,.14), var(--m3-fundo) 55%);
+}
+.resultado-topo{padding:44px 24px 10px; display:flex; flex-direction:column; align-items:center; gap:6px;}
+.vela-svg-wrap{width:190px; height:210px; animation:aparecerVela 1.1s ease;}
+@keyframes aparecerVela{from{opacity:0; transform:scale(.85) translateY(10px);} to{opacity:1; transform:scale(1) translateY(0);}}
+.resultado-selo{font-family:var(--font-manuscrita); font-size:17px; color:var(--m3-fio); opacity:.9;}
+.resultado-nome{font-family:var(--font-display); font-size:32px; font-weight:700; text-align:center; max-width:440px; margin-top:2px;}
+.resultado-salvo{font-size:12px; color:rgba(244,239,226,.4); margin-top:6px; display:flex; align-items:center; gap:6px;}
+.resultado-corpo{max-width:500px; width:100%; padding:26px 24px 60px; display:flex; flex-direction:column; align-items:center; gap:22px;}
+.resultado-leitura{max-width:460px; font-size:15.5px; line-height:1.8; color:rgba(244,239,226,.88);}
+.resultado-leitura p{margin-bottom:12px;}
+.micro-habito-card{
+  max-width:460px; width:100%; background:linear-gradient(135deg, rgba(201,164,92,.14), rgba(201,164,92,.04));
+  border:1px solid var(--m3-fio); border-radius:8px; padding:20px 22px;
+}
+.micro-habito-card .titulo{font-size:11px; text-transform:uppercase; letter-spacing:.06em; color:var(--m3-fio); font-weight:700; margin-bottom:8px;}
+.micro-habito-card #microHabitoTexto{font-size:15px; line-height:1.6; font-weight:500;}
+.btn-aprofundar{font-size:13px; color:rgba(244,239,226,.5); text-decoration:underline;}
+.aprofundar-texto{max-width:460px; font-size:14px; line-height:1.65; color:rgba(244,239,226,.7); display:none;}
+.aprofundar-texto.vis{display:block;}
+
+/* ---------- CICLO 30 DIAS (esqueleto) ---------- */
+.ciclo30{padding:30px 20px 60px; gap:20px; align-items:center;}
+.ciclo30-titulo{font-family:var(--font-display); font-size:22px; font-weight:600; text-align:center;}
+.ciclo30-dias{display:grid; grid-template-columns:repeat(10,1fr); gap:4px; max-width:460px; width:100%;}
+.dia-marcador{aspect-ratio:1; border-radius:2px; background:rgba(244,239,226,.08);}
+.dia-marcador.feito{background:var(--m3-fio);}
+.dia-marcador.checkpoint{border:1.5px solid var(--m3-fio);}
+.dev-nota{font-size:11px; color:rgba(244,239,226,.3); text-align:center; max-width:400px;}
+</style>
+</head>
+<body>
+
+<!-- ============================================================
+     TELA — TRAVADO (menos de 10 registros no M2)
+============================================================ -->
+<div class="tela travado" id="t-travado">
+  <h2>O espelho ainda não tem material suficiente pra refletir nada.</h2>
+  <div class="contador-visual" id="contadorTravado"></div>
+  <p id="textoTravado"></p>
+  <a href="m2_diario_de_captura.html" class="btn-primario" style="text-decoration:none;">Ir pro Diário de Captura</a>
+  <a href="0_hub_mapa.html" style="font-size:13px;color:rgba(244,239,226,.4);text-decoration:underline;">voltar ao Mapa</a>
+</div>
+
+<!-- ============================================================
+     TELA — ABERTURA DO CICLO
+============================================================ -->
+<div class="tela abertura-ciclo" id="t-abertura">
+  <h1 id="tituloAbertura">Três cenas. Nada de perfil, nada de teste.</h1>
+  <p>Só você reagindo a situações comuns. O que aparecer nas suas respostas é o que vira o espelho.</p>
+  <button class="btn-primario" id="btnComecarCiclo">Começar</button>
+</div>
+
+<!-- ============================================================
+     TELA — CENAS (3 blocos)
+============================================================ -->
+<div class="tela" id="t-cena">
+  <button class="link-voltar-mapa" id="linkVoltarMapa">← sair</button>
+  <div class="tecelagem-wrap">
+    <div class="tecelagem-svg" id="tecelagemSvg"></div>
+    <div class="cena-progresso" id="cenaProgresso"></div>
+  </div>
+  <div class="wrap cena-corpo">
+    <div class="cena-eyebrow" id="cenaEyebrow"></div>
+    <div class="cena-texto" id="cenaTexto"></div>
+    <div class="cena-resposta">
+      <textarea id="cenaInput" placeholder="escreve aqui, sem se preocupar em formatar..."></textarea>
+      <div class="linha-escrita"></div>
+      <div class="cena-hint" id="cenaHint"></div>
+    </div>
+    <div class="cena-nav" style="gap:16px;">
+      <button class="btn-voltar-cena" id="btnVoltarCena" style="font-size:13px;color:rgba(244,239,226,.4);text-decoration:underline;visibility:hidden;">voltar</button>
+      <button class="btn-primario" id="btnProximaCena">Continuar</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================================
+     TELA — FILTRO DO MEDO BEM VESTIDO
+============================================================ -->
+<div class="tela filtro" id="t-filtro">
+  <div class="wrap" style="display:flex; flex-direction:column; gap:18px;">
+    <h2>Antes de ver o que apareceu —</h2>
+    <p class="sub">3 desculpas clássicas. Se alguma soar familiar, toque nela. Só isso.</p>
+    <div id="desculpasLista" style="display:flex;flex-direction:column;gap:6px;max-width:420px;margin:0 auto;width:100%;"></div>
+    <button class="btn-primario" id="btnRevelar" style="align-self:center;">Revelar o padrão</button>
+  </div>
+</div>
+
+<!-- ============================================================
+     TELA — REVELANDO (processando)
+============================================================ -->
+<div class="tela revelando" id="t-revelando">
+  <div class="anel"></div>
+  <p id="revelandoTexto">costurando os panos...</p>
+</div>
+
+<!-- ============================================================
+     TELA — RESULTADO (vela batizada)
+============================================================ -->
+<div class="tela resultado" id="t-resultado">
+  <div class="resultado-topo">
+    <div class="vela-svg-wrap" id="velaSvgWrap"></div>
+    <div class="resultado-selo">Sua vela recebeu um nome</div>
+    <div class="resultado-nome" id="resultadoNome"></div>
+    <div class="resultado-salvo">⚓ guardada no seu cais</div>
+  </div>
+  <div class="resultado-corpo">
+    <div class="resultado-leitura" id="resultadoLeitura"></div>
+    <button class="btn-aprofundar" id="btnAprofundar">quero entender melhor isso →</button>
+    <div class="aprofundar-texto" id="aprofundarTexto"></div>
+    <div class="micro-habito-card">
+      <div class="titulo">Seu micro-hábito da semana</div>
+      <div id="microHabitoTexto"></div>
+    </div>
+    <button class="btn-primario" id="btnIrCiclo30">Começar o ciclo de 30 dias</button>
+  </div>
+</div>
+
+<!-- ============================================================
+     TELA — CICLO 30 DIAS (esqueleto)
+============================================================ -->
+<div class="tela ciclo30" id="t-ciclo30">
+  <div class="ciclo30-titulo">Ciclo de 30 dias — Dia <span id="diaAtualNum">1</span></div>
+  <div class="wrap" style="text-align:center;">
+    <div class="cena-eyebrow" id="cicloDiaEyebrow" style="margin-bottom:8px;"></div>
+    <div class="cena-texto" id="cicloDiaCena" style="margin-bottom:16px;"></div>
+    <textarea id="cicloDiaInput" placeholder="2-3 frases sobre o dia..." style="width:100%;min-height:90px;background:rgba(244,239,226,.05);border:1px solid var(--m3-fio-fraco);color:var(--branco);padding:14px;border-radius:6px;font-family:inherit;font-size:14px;resize:none;"></textarea>
+    <div class="cena-hint" id="cicloDiaHint"></div>
+    <button class="btn-primario" id="btnSalvarDia" style="margin-top:16px;">Registrar o dia</button>
+  </div>
+  <div class="ciclo30-dias" id="ciclo30Grid"></div>
+  <div id="checkpointTexto" style="max-width:440px;text-align:center;font-size:14px;color:var(--m3-fio);"></div>
+  <a href="0_hub_mapa.html" style="font-size:13px;color:rgba(244,239,226,.4);text-decoration:underline;">voltar ao Mapa (retomo depois)</a>
+  <div class="dev-nota">[dev] simulação de avanço de dia, só pra teste — não existe em produção:
+    <button id="btnSimularDia" style="text-decoration:underline;color:var(--m3-fio);">avançar 1 dia →</button>
+  </div>
+</div>
+
+<script>
+(function(){
+'use strict';
+
+/* ============================================================
+   PERSISTÊNCIA
+============================================================ */
+function carregar(chave, padrao){ try{ var r=localStorage.getItem(chave); return r?JSON.parse(r):padrao; }catch(e){ return padrao; } }
+function salvar(chave, valor){ try{ localStorage.setItem(chave, JSON.stringify(valor)); }catch(e){} }
+
+var m2Capturas = carregar('sor_m2_capturas', []);
+var m3Velas = carregar('sor_m3_velas', []);
+var totalInterceptacoes = m2Capturas.filter(function(c){return c.tipo_registro==='interceptacao';}).length;
+
+function mostrar(id){
+  document.querySelectorAll('.tela').forEach(function(t){t.classList.remove('ativa');});
+  document.getElementById(id).classList.add('ativa');
+}
+
+/* ============================================================
+   GATE — mínimo 10 registros no M2
+============================================================ */
+if(totalInterceptacoes < 10){
+  var el = document.getElementById('contadorTravado');
+  for(var i=0;i<10;i++){ el.innerHTML += '<span'+(i<totalInterceptacoes?' class="feito"':'')+'></span>'; }
+  document.getElementById('textoTravado').textContent =
+    'Faltam '+(10-totalInterceptacoes)+' interceptações no Diário de Captura. O espelho precisa de comportamento real pra refletir alguma coisa — não de mais um teste.';
+  mostrar('t-travado');
+} else {
+  mostrar('t-abertura');
+}
+
+/* ============================================================
+   BANCO DE CENAS — maior que o necessário, sorteia sem repetir
+   até esgotar (esgotamento em uso prolongado é dívida editorial
+   já documentada — ver memória do projeto).
+============================================================ */
+var BANCO_CENAS = {
+  conhecimento: [
+    {eyebrow:'Uma coisa que você sabe fazer', texto:'Alguém te pergunta como você resolveu um problema que pra essa pessoa parecia impossível. O que passa pela sua cabeça antes de responder?'},
+    {eyebrow:'O que você ensina sem perceber', texto:'Um amigo comenta que aprendeu algo só de te observar trabalhar. Como você reage a esse comentário?'},
+    {eyebrow:'Aquilo que virou hobby', texto:'Você faz uma coisa bem, há anos, e sempre chamou isso de "só um hobby". O que te impede de chamar isso de outra coisa?'}
+  ],
+  visao: [
+    {eyebrow:'Cinco anos daqui a pouco', texto:'Alguém pergunta onde você se vê daqui a cinco anos e espera uma resposta na hora. O que você diz primeiro — antes de filtrar?'},
+    {eyebrow:'O dia em que parou de imaginar', texto:'Teve uma época em que você parou de sonhar grande com dinheiro. O que aconteceu perto desse momento?'},
+    {eyebrow:'A vida que parece de outro mundo', texto:'Você vê alguém vivendo exatamente o que você queria. O que vem primeiro — antes de qualquer julgamento consciente?'}
+  ],
+  disponibilidade: [
+    {eyebrow:'O convite que você recusou', texto:'Apareceu uma oportunidade real essa semana e você disse "não tenho tempo agora". Foi verdade, ou foi outra coisa com esse nome?'},
+    {eyebrow:'A agenda que nunca sobra', texto:'Você olha pra sua semana e não sobra espaço pra nada novo. Pra onde foi esse tempo, de verdade?'},
+    {eyebrow:'Quando "depois" nunca chega', texto:'Tem algo que você diz "vou fazer depois" há mais tempo do que gostaria de admitir. O que é, e o que "depois" significa nesse caso?'}
+  ]
+};
+
+var BANCO_DESCULPAS = [
+  'Eu preciso pensar mais um pouco antes de continuar.',
+  'Agora não é um bom momento — a semana está corrida.',
+  'Vou fazer isso direito quando tiver mais tempo livre.',
+  'Preciso de mais informação antes de seguir.',
+  'Isso não é prioridade agora, tem coisa mais urgente.',
+  'Vou esperar um sinal mais claro antes de continuar.'
+];
+var RESPOSTA_DESCULPA = 'Essa é a desculpa, não o motivo.';
+
+function jaSorteadas(banco, sorteioAnterior){
+  return (sorteioAnterior||[]).map(function(t){return t;});
+}
+function sortearCena(chave, jaUsadas){
+  var disponiveis = BANCO_CENAS[chave].filter(function(c){ return jaUsadas.indexOf(c.texto)===-1; });
+  var pool = disponiveis.length ? disponiveis : BANCO_CENAS[chave]; // esgotou → recomeça o banco
+  return pool[Math.floor(Math.random()*pool.length)];
+}
+function sortearDesculpas(qtd, jaUsadas){
+  var disponiveis = BANCO_DESCULPAS.filter(function(d){ return jaUsadas.indexOf(d)===-1; });
+  var pool = disponiveis.length >= qtd ? disponiveis : BANCO_DESCULPAS;
+  var copia = pool.slice();
+  var sorteadas = [];
+  while(sorteadas.length < qtd && copia.length){
+    var idx = Math.floor(Math.random()*copia.length);
+    sorteadas.push(copia.splice(idx,1)[0]);
+  }
+  return sorteadas;
+}
+
+/* ============================================================
+   ESTADO DO CICLO ATUAL
+============================================================ */
+var cicloAnterior = m3Velas.length ? m3Velas[m3Velas.length-1] : null;
+var velaAtual = {
+  ciclo_numero: (cicloAnterior ? cicloAnterior.ciclo_numero : 0) + 1,
+  cena_conhecimento_texto:null, cena_conhecimento_resposta:null,
+  cena_visao_texto:null, cena_visao_resposta:null,
+  cena_disponibilidade_texto:null, cena_disponibilidade_resposta:null,
+  medo_confirmado:false, desculpas_sorteadas:[],
+  nome_padrao:null, leitura_ia:null, leitura_aprofundar:null, micro_habito:null,
+  ciclo_dias:[], checkpoint_dia7:null, checkpoint_dia14:null, checkpoint_dia21:null, relatorio_dia30:null,
+  ciclo_concluido_em:null, created_at:new Date().toISOString()
+};
+
+document.getElementById('tituloAbertura').textContent = cicloAnterior
+  ? 'De novo. Dessa vez com mais dado real por trás.'
+  : 'Três cenas. Nada de perfil, nada de teste.';
+
+/* ============================================================
+   FLUXO DE CENAS
+============================================================ */
+var ORDEM_BLOCOS = ['conhecimento','visao','disponibilidade'];
+var cenaIdx = 0;
+var cenasEscolhidas = {};
+var respostasSalvas = {}; // permite voltar e ver o que já respondeu, sem perder o texto
+
+function renderProgresso(){
+  var el = document.getElementById('cenaProgresso');
+  el.innerHTML = ORDEM_BLOCOS.map(function(_,i){
+    return '<span class="'+(i<cenaIdx?'feito':(i===cenaIdx?'ativo':''))+'"></span>';
+  }).join('');
+}
+
+/**
+ * Tecelagem viva — a vela se costura conforme o leitor responde,
+ * visível o tempo todo durante o fluxo (não só na revelação final).
+ * Mesmo princípio visual da vela final (renderVelaSvg), mas parcial:
+ * só os panos já respondidos aparecem, o resto fica como contorno vazio.
+ */
+function renderTecelagem(){
+  var svgNS='http://www.w3.org/2000/svg';
+  var svg=document.createElementNS(svgNS,'svg');
+  svg.setAttribute('viewBox','0 0 96 108'); svg.style.width='100%'; svg.style.height='100%';
+  var mastro=document.createElementNS(svgNS,'rect');
+  mastro.setAttribute('x','46'); mastro.setAttribute('y','6'); mastro.setAttribute('width','3'); mastro.setAttribute('height','96'); mastro.setAttribute('fill','#5c4426');
+  svg.appendChild(mastro);
+  var blocos = ['conhecimento','visao','disponibilidade'];
+  var faixasY = [[8,38],[38,68],[68,98]];
+  var cores = ['#c9a45c','#a98644','#8a6a35'];
+  blocos.forEach(function(chave, i){
+    var resp = respostasSalvas[chave] ? respostasSalvas[chave].resposta : null;
+    var y1=faixasY[i][0], y2=faixasY[i][1];
+    if(resp){
+      var intensidade = Math.min(1, resp.length/100);
+      var largura = 14 + intensidade*28;
+      var path=document.createElementNS(svgNS,'path');
+      path.setAttribute('d','M48,'+y1+' L'+(48-largura)+','+((y1+y2)/2)+' L48,'+y2+' Z');
+      path.setAttribute('fill',cores[i]); path.setAttribute('opacity','0.92');
+      path.style.transition='opacity .5s ease';
+      svg.appendChild(path);
+    } else {
+      var contorno=document.createElementNS(svgNS,'path');
+      contorno.setAttribute('d','M48,'+y1+' L28,'+((y1+y2)/2)+' L48,'+y2+' Z');
+      contorno.setAttribute('fill','none'); contorno.setAttribute('stroke','rgba(244,239,226,.12)'); contorno.setAttribute('stroke-dasharray','3,3');
+      svg.appendChild(contorno);
+    }
+  });
+  var wrap = document.getElementById('tecelagemSvg');
+  wrap.innerHTML=''; wrap.appendChild(svg);
+}
+
+document.getElementById('linkVoltarMapa').addEventListener('click', function(){
+  window.location.href = '0_hub_mapa.html';
+});
+
+function renderCena(){
+  var chave = ORDEM_BLOCOS[cenaIdx];
+  var jaUsadasGlobal = cicloAnterior ? [
+    cicloAnterior.cena_conhecimento_texto, cicloAnterior.cena_visao_texto, cicloAnterior.cena_disponibilidade_texto
+  ].filter(Boolean) : [];
+  var cena = respostasSalvas[chave] ? {eyebrow:respostasSalvas[chave].eyebrow, texto:respostasSalvas[chave].texto} : sortearCena(chave, jaUsadasGlobal);
+  cenasEscolhidas[chave] = cena;
+
+  var corpo = document.querySelector('.cena-corpo');
+  corpo.style.opacity='0';
+  setTimeout(function(){
+    document.getElementById('cenaEyebrow').textContent = cena.eyebrow;
+    document.getElementById('cenaTexto').textContent = cena.texto;
+    document.getElementById('cenaInput').value = respostasSalvas[chave] ? respostasSalvas[chave].resposta : '';
+    document.getElementById('cenaHint').textContent = '';
+    document.getElementById('cenaHint').classList.remove('aviso');
+    document.getElementById('btnProximaCena').textContent = cenaIdx < 2 ? 'Continuar' : 'Ir pro filtro final';
+    document.getElementById('btnVoltarCena').style.visibility = cenaIdx > 0 ? 'visible' : 'hidden';
+    renderProgresso();
+    renderTecelagem();
+    corpo.style.transition='opacity .5s ease';
+    corpo.style.opacity='1';
+  }, 220); // transição mais lenta que M1/M2 — o ritmo aqui é contemplativo, não urgente
+}
+renderCena();
+
+document.getElementById('btnVoltarCena').addEventListener('click', function(){
+  if(cenaIdx<=0) return;
+  cenaIdx--;
+  renderCena();
+});
+
+var pediuMais = false;
+document.getElementById('btnProximaCena').addEventListener('click', function(){
+  var texto = document.getElementById('cenaInput').value.trim();
+  var chave = ORDEM_BLOCOS[cenaIdx];
+
+  if(texto.length < 15 && !pediuMais){
+    // Validação leve: pergunta de acompanhamento por script, não bloqueia se insistir curta
+    document.getElementById('cenaHint').textContent = 'O que exatamente você sentiu nesse momento? Só mais uma frase.';
+    document.getElementById('cenaHint').classList.add('aviso');
+    pediuMais = true;
+    return;
+  }
+  pediuMais = false;
+
+  var cena = cenasEscolhidas[chave];
+  velaAtual['cena_'+chave+'_texto'] = cena.texto;
+  velaAtual['cena_'+chave+'_resposta'] = texto || '(sem resposta detalhada)';
+  respostasSalvas[chave] = {eyebrow:cena.eyebrow, texto:cena.texto, resposta:texto};
+
+  cenaIdx++;
+  if(cenaIdx < ORDEM_BLOCOS.length){
+    renderCena();
+  } else {
+    montarFiltro();
+    mostrar('t-filtro');
+  }
+});
+
+document.getElementById('btnComecarCiclo').addEventListener('click', function(){
+  mostrar('t-cena');
+});
+
+/* ============================================================
+   FILTRO DO MEDO BEM VESTIDO
+============================================================ */
+var desculpasSelecionadas = [];
+function montarFiltro(){
+  var jaUsadas = cicloAnterior ? (cicloAnterior.desculpas_sorteadas||[]) : [];
+  var desculpas = sortearDesculpas(3, jaUsadas);
+  velaAtual.desculpas_sorteadas = desculpas;
+  desculpasSelecionadas = [];
+
+  var lista = document.getElementById('desculpasLista');
+  lista.innerHTML = desculpas.map(function(d,i){
+    return '<div class="desculpa-item" data-idx="'+i+'">'+d+
+      '<div class="resposta-desculpa">'+RESPOSTA_DESCULPA+'</div></div>';
+  }).join('');
+
+  lista.querySelectorAll('.desculpa-item').forEach(function(item){
+    item.addEventListener('click', function(){
+      if(item.classList.contains('marcada')) return;
+      item.classList.add('marcada');
+      item.querySelector('.resposta-desculpa').classList.add('vis');
+      desculpasSelecionadas.push(item.textContent.replace(RESPOSTA_DESCULPA,'').trim());
+      travarBotaoRevelar();
+    });
+  });
+}
+
+function travarBotaoRevelar(){
+  var btn = document.getElementById('btnRevelar');
+  btn.disabled = true;
+  btn.style.opacity = '.4';
+  setTimeout(function(){ btn.disabled=false; btn.style.opacity='1'; }, 2200);
+}
+
+document.getElementById('btnRevelar').addEventListener('click', function(){
+  velaAtual.medo_confirmado = desculpasSelecionadas.length > 0;
+  mostrar('t-revelando');
+  var frases = cicloAnterior
+    ? ['revisitando o padrão anterior...','cruzando com o que mudou...','vendo o que ficou diferente...']
+    : ['lendo suas palavras com calma...','costurando os três panos...','o primeiro padrão está tomando forma...'];
+  var i=0;
+  document.getElementById('revelandoTexto').textContent = frases[0];
+  var iv = setInterval(function(){ i++; document.getElementById('revelandoTexto').textContent = frases[i%frases.length]; }, 1100);
+  setTimeout(function(){
+    clearInterval(iv);
+    gerarLeituraEVela();
+    mostrar('t-resultado');
+  }, 3400); // mais lento que o processamento do M1/M2 — reforça o ritmo contemplativo do M3
+});
+
+/* ============================================================
+   GERAÇÃO DA LEITURA — stand-in de script local.
+   NOTA: em produção, isso é uma chamada real via Netlify/Vercel
+   Function (claude-proxy), recebendo o payload digerido de
+   montarPayloadEspelhoM3() (calculos_matematica_fria.js) — as 3
+   respostas + categoria mais recorrente do M2 + padrão do ciclo
+   anterior. Regra de tom: nunca linguagem clínica, nomear só
+   depois de descrever o comportamento com as palavras do leitor.
+============================================================ */
+var PADROES_SCRIPT = [
+  {
+    nome:'Medo de Ocupar Espaço',
+    palavras:['ensin','hobby','percebe','humild','diminu','modest'],
+    leitura:function(){
+      return 'Você minimiza o que sabe fazer bem — chama de "hobby" o que outras pessoas chamariam de talento raro. Isso não é modéstia. É um jeito bem vestido de não precisar cobrar valor por aquilo, porque cobrar significaria assumir que aquilo importa.';
+    },
+    micro:'Essa semana, da próxima vez que alguém elogiar algo que você faz bem, resista ao impulso de diminuir — só diga "obrigado" e pare aí.'
+  },
+  {
+    nome:'Medo do Próprio Tamanho',
+    palavras:['cinco anos','sonhar','imaginar','outro mundo','distante','grande demais'],
+    leitura:function(){
+      return 'Quando a pergunta é sobre o futuro, sua resposta vem pequena antes de vir grande — como se sonhar alto fosse um risco social, não uma possibilidade real. Você aprendeu a se proteger da decepção encolhendo a pergunta antes dela crescer.';
+    },
+    micro:'Essa semana, escreva uma vez, sem editar, onde você realmente quer chegar — sem ajustar pro que parece "razoável".'
+  },
+  {
+    nome:'Medo Disfarçado de Falta de Tempo',
+    palavras:['tempo','agenda','depois','corrida','adiei','adiar'],
+    leitura:function(){
+      return 'Você usa "não tenho tempo" com uma frequência que não é sobre agenda — é sobre não precisar decidir se algo é ou não prioridade. Enquanto for falta de tempo, você nunca precisa admitir que está evitando.';
+    },
+    micro:'Essa semana, da próxima vez que disser "não tenho tempo", complete a frase em voz alta: "...porque na verdade eu tenho medo de ___".'
+  },
+  {
+    nome:'Medo do Julgamento Alheio',
+    palavras:['vergonha','julga','pensam','falar','outros','opinião','achar'],
+    leitura:function(){
+      return 'O que os outros vão pensar aparece nas suas respostas antes do que você realmente quer. Não é vaidade — é um cálculo automático que roda antes de qualquer decisão, medindo reação alheia antes de medir o que importa pra você.';
+    },
+    micro:'Essa semana, antes de decidir algo pensando no que os outros vão achar, pergunte primeiro: "e o que EU acho disso?"'
+  },
+  {
+    nome:'Medo de Não Merecer',
+    palavras:['mereç','sorte','herança','condições','privilégio','oportunidade'],
+    leitura:function(){
+      return 'Quando você vê alguém em situação melhor, a primeira explicação que aparece é externa — sorte, condições, privilégio. Isso protege de uma pergunta mais desconfortável: será que você também pode chegar lá, e simplesmente ainda não tentou de verdade?';
+    },
+    micro:'Essa semana, escreva uma coisa que você conquistou por esforço próprio — sem atribuir a sorte ou circunstância.'
+  }
+];
+
+/**
+ * Motor de correspondência por PONTUAÇÃO (não "primeira regra que bate").
+ * Cada padrão soma 1 ponto por palavra-chave encontrada no texto combinado;
+ * vence o de maior pontuação. Reduz o problema de sempre cair no mesmo
+ * padrão default quando nenhuma regra bate com força — ainda é um stand-in
+ * de script, a versão real usa IA pra interpretar sentido, não só léxico.
+ */
+function calcularPadraoPorPontuacao(textoCombinado){
+  var textoLower = textoCombinado.toLowerCase();
+  var pontuacoes = PADROES_SCRIPT.map(function(p){
+    var pontos = p.palavras.reduce(function(soma, palavra){
+      return soma + (textoLower.indexOf(palavra) >= 0 ? 1 : 0);
+    }, 0);
+    return {padrao:p, pontos:pontos};
+  });
+  pontuacoes.sort(function(a,b){ return b.pontos - a.pontos; });
+  // Empate em 0 pontos: sorteia entre os 3 primeiros em vez de sempre o mesmo default
+  if(pontuacoes[0].pontos === 0){
+    var idx = Math.floor(Math.random()*Math.min(3,PADROES_SCRIPT.length));
+    return PADROES_SCRIPT[idx];
+  }
+  return pontuacoes[0].padrao;
+}
+
+function gerarLeituraEVela(){
+  var textoCombinado = [velaAtual.cena_conhecimento_resposta, velaAtual.cena_visao_resposta, velaAtual.cena_disponibilidade_resposta].join(' ');
+  var padrao = calcularPadraoPorPontuacao(textoCombinado);
+
+  var leitura = padrao.leitura();
+  if(cicloAnterior && cicloAnterior.nome_padrao === padrao.nome){
+    leitura += ' Mesmo padrão do ciclo anterior — mas dessa vez com menos força nas suas próprias palavras. Isso também é dado.';
+  }
+
+  velaAtual.nome_padrao = padrao.nome;
+  velaAtual.leitura_ia = leitura;
+  velaAtual.micro_habito = padrao.micro;
+
+  document.getElementById('resultadoNome').textContent = padrao.nome;
+  document.getElementById('resultadoLeitura').innerHTML = '<p>'+leitura+'</p>';
+  document.getElementById('microHabitoTexto').textContent = padrao.micro;
+  renderVelaSvg();
+
+  m3Velas.push(velaAtual);
+  salvar('sor_m3_velas', m3Velas);
+}
+
+document.getElementById('btnAprofundar').addEventListener('click', function(){
+  var el = document.getElementById('aprofundarTexto');
+  if(el.classList.contains('vis')) return;
+  el.textContent = 'Isso costuma aparecer mais forte em momentos de mudança — quando algo está prestes a dar certo, ou prestes a exigir uma decisão real. Não é fraqueza, é um mecanismo de proteção que ficou desatualizado. A pergunta não é como eliminar isso, é como decidir apesar disso.';
+  el.classList.add('vis');
+  velaAtual.leitura_aprofundar = el.textContent;
+  var idx = m3Velas.length-1;
+  if(idx>=0){ m3Velas[idx].leitura_aprofundar = el.textContent; salvar('sor_m3_velas', m3Velas); }
+});
+
+/* ============================================================
+   VELA SVG — placeholder geométrico, 3 panos costurados
+============================================================ */
+function renderVelaSvg(){
+  var svgNS='http://www.w3.org/2000/svg';
+  var svg=document.createElementNS(svgNS,'svg');
+  svg.setAttribute('viewBox','0 0 140 160'); svg.style.width='100%'; svg.style.height='100%';
+  var mastro=document.createElementNS(svgNS,'rect');
+  mastro.setAttribute('x','67'); mastro.setAttribute('y','10'); mastro.setAttribute('width','4'); mastro.setAttribute('height','140'); mastro.setAttribute('fill','#5c4426');
+  svg.appendChild(mastro);
+  var panos=[
+    {resp:velaAtual.cena_conhecimento_resposta, cor:'#b8922a', y1:14,y2:55},
+    {resp:velaAtual.cena_visao_resposta, cor:'#d9b354', y1:55,y2:96},
+    {resp:velaAtual.cena_disponibilidade_resposta, cor:'#8a5a2f', y1:96,y2:137}
+  ];
+  panos.forEach(function(p){
+    var intensidade = Math.min(1, (p.resp||'').length/120); // pano mais "cheio" com resposta mais rica
+    var largura = 20 + intensidade*45;
+    var path=document.createElementNS(svgNS,'path');
+    path.setAttribute('d','M67,'+p.y1+' L'+(67-largura)+','+((p.y1+p.y2)/2)+' L67,'+p.y2+' Z');
+    path.setAttribute('fill',p.cor); path.setAttribute('opacity','0.88');
+    svg.appendChild(path);
+  });
+  var wrap=document.getElementById('velaSvgWrap');
+  wrap.innerHTML=''; wrap.appendChild(svg);
+}
+
+/* ============================================================
+   CICLO DE 30 DIAS — esqueleto funcional
+============================================================ */
+var BANCO_CENAS_DIARIAS = [
+  'Hoje, o que quase te fez recuar de alguma coisa?',
+  'Alguma vez hoje você minimizou algo que fez bem?',
+  'O que você adiou hoje dizendo "depois eu vejo"?',
+  'Teve algum momento hoje em que você se sentiu pequeno sem motivo real?',
+  'O que você faria diferente hoje se ninguém fosse ver?'
+];
+var diaAtual = 1;
+document.getElementById('btnIrCiclo30').addEventListener('click', function(){
+  mostrar('t-ciclo30');
+  renderDiaCiclo();
+  renderGrid30();
+});
+
+function renderDiaCiclo(){
+  document.getElementById('diaAtualNum').textContent = diaAtual;
+  var cena = BANCO_CENAS_DIARIAS[(diaAtual-1) % BANCO_CENAS_DIARIAS.length];
+  document.getElementById('cicloDiaEyebrow').textContent = 'Dia '+diaAtual+' de 30';
+  document.getElementById('cicloDiaCena').textContent = cena;
+  document.getElementById('cicloDiaInput').value = '';
+  document.getElementById('cicloDiaHint').textContent = '';
+  document.getElementById('checkpointTexto').textContent = '';
+}
+
+function renderGrid30(){
+  var grid = document.getElementById('ciclo30Grid');
+  grid.innerHTML='';
+  for(var i=1;i<=30;i++){
+    var feito = velaAtual.ciclo_dias.some(function(d){return d.dia===i;});
+    var checkpoint = [7,14,21,30].indexOf(i) >= 0;
+    var d = document.createElement('div');
+    d.className = 'dia-marcador'+(feito?' feito':'')+(checkpoint?' checkpoint':'');
+    grid.appendChild(d);
+  }
+}
+
+var pediuMaisDia = false;
+document.getElementById('btnSalvarDia').addEventListener('click', function(){
+  var texto = document.getElementById('cicloDiaInput').value.trim();
+  if(texto.length < 15 && !pediuMaisDia){
+    document.getElementById('cicloDiaHint').textContent = 'Só mais uma frase — o que exatamente aconteceu?';
+    pediuMaisDia = true;
+    return;
+  }
+  pediuMaisDia = false;
+
+  velaAtual.ciclo_dias.push({dia:diaAtual, cena_texto:document.getElementById('cicloDiaCena').textContent, resposta:texto||'(sem detalhe)'});
+
+  if([7,14,21].indexOf(diaAtual) >= 0){
+    var campo = 'checkpoint_dia'+diaAtual;
+    velaAtual[campo] = 'Nesses últimos dias, o padrão de "'+velaAtual.nome_padrao+'" apareceu de um jeito um pouco diferente — vale reler suas respostas da semana com esse nome em mente.';
+    document.getElementById('checkpointTexto').textContent = velaAtual[campo];
+  }
+  if(diaAtual === 30){
+    velaAtual.relatorio_dia30 = 'Trinta dias de registro real sobre "'+velaAtual.nome_padrao+'". O padrão não desaparece em 30 dias — mas agora ele tem nome, e você tem prova escrita de quando apareceu e quando não.';
+    velaAtual.ciclo_concluido_em = new Date().toISOString();
+    document.getElementById('checkpointTexto').textContent = velaAtual.relatorio_dia30;
+  }
+
+  var idx = m3Velas.length-1;
+  if(idx>=0){ m3Velas[idx] = velaAtual; salvar('sor_m3_velas', m3Velas); }
+  renderGrid30();
+});
+
+// [dev-only] simula avanço de dia pra testar o fluxo sem esperar 30 dias reais
+document.getElementById('btnSimularDia').addEventListener('click', function(){
+  if(diaAtual < 30){ diaAtual++; renderDiaCiclo(); }
+});
+
+})();
+</script>
+</body>
+</html>
